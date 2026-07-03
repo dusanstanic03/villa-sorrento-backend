@@ -4,23 +4,19 @@
  */
 package com.dusan.villa_sorrento_backend.dto;
 
-/**
- *
- * @author Dusan
- */
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Set;
 
-
+/**
+ * DTO objekat za stavku rezervacije.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
-
 public class StavkaRezervacijeDTO {
     private Long id;
     private int rb;
@@ -28,4 +24,8 @@ public class StavkaRezervacijeDTO {
     private LocalDate datumDo;
     private Double iznos;
     private Long sobaId;
+    private Set<Long> gostIds;
+    private Set<Long> uslugaIds;
+    private Set<GostDTO> gosti;
+    private Set<UslugaDTO> usluge;
 }
