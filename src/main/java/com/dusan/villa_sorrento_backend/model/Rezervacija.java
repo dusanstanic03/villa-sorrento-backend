@@ -4,10 +4,6 @@
  */
 package com.dusan.villa_sorrento_backend.model;
 
-/**
- *
- * @author Dusan
- */
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -17,9 +13,13 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-
-
-
+/**
+ * Predstavlja rezervaciju koju kreira korisnik sistema.
+ *
+ * Rezervacija objedinjuje jednu ili vise stavki rezervacije, ukupni iznos,
+ * datum kreiranja i placanja. Gosti nisu direktno vezani za rezervaciju, vec za
+ * konkretne stavke rezervacije, jer isti gost moze biti u vise stavki.
+ */
 @Entity 
 @Data 
 @NoArgsConstructor 
