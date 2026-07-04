@@ -15,10 +15,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface SobaRepository extends JpaRepository<Soba, Long> {
     List<Soba> findByDostupna(Boolean dostupna);
-    List<Soba> findByTipSobe(String tipSobe);
+    List<Soba> findByTipSobe_Naziv(String tipSobe);
     List<Soba> findByCenaBetween(Double minCena, Double maxCena);
   
-    List<Soba> findByDostupnaAndTipSobeAndCenaBetween(Boolean dostupna, String tipSobe, Double minCena, Double maxCena);
+    List<Soba> findByDostupnaAndTipSobe_NazivAndCenaBetween(Boolean dostupna, String tipSobe, Double minCena, Double maxCena);
 
     Optional<Soba> findByOpis(String opis);
     
