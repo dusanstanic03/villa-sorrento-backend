@@ -29,9 +29,12 @@ public class GostService {
      * @return sacuvani gost
      */
     public GostDTO createGost(GostDTO gostDTO) {
-        if (gostRepository.findByBrojIsprave(gostDTO.getBrojIsprave()).isPresent()) {
-            throw new IllegalArgumentException("Gost sa brojem isprave " + gostDTO.getBrojIsprave() + " vec postoji.");
-        }
+        return gostRepository.findByBrojIsprave(gostDTO.getBrojIsprave())
+                .map(gostMapper::gostToGostDTO)
+                .orElseGet(() -> saveNewGost(gostDTO));
+    }
+
+    private GostDTO saveNewGost(GostDTO gostDTO) {
         Gost saved = gostRepository.save(gostMapper.gostDTOToGost(gostDTO));
         return gostMapper.gostToGostDTO(saved);
     }

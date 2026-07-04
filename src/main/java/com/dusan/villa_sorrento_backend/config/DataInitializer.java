@@ -84,9 +84,10 @@ public class DataInitializer implements CommandLineRunner{
 
     private void addOrUpdateSoba(String opis, Double cena, String jedinicaMere, Boolean dostupna, String tipSobe, String slikaUrl) {
 
-        if (sobaRepository.findByOpis(opis).isEmpty()) { 
-            TipSobe tip = tipSobeRepository.findByNaziv(tipSobe)
-                    .orElseThrow(() -> new IllegalStateException("Tip sobe " + tipSobe + " nije inicijalizovan."));
+        TipSobe tip = tipSobeRepository.findByNaziv(tipSobe)
+                .orElseThrow(() -> new IllegalStateException("Tip sobe " + tipSobe + " nije inicijalizovan."));
+
+        if (sobaRepository.findByOpis(opis).isEmpty()) {
             Soba novaSoba = new Soba();
             novaSoba.setOpis(opis);
             novaSoba.setCena(cena);
@@ -96,6 +97,13 @@ public class DataInitializer implements CommandLineRunner{
             novaSoba.setSlikaUrl(slikaUrl);
             sobaRepository.save(novaSoba);
             logger.info("Soba '{}' dodat.", novaSoba);
+        } else {
+            Soba postojecaSoba = sobaRepository.findByOpis(opis).get();
+            if (postojecaSoba.getTipSobe() == null) {
+                postojecaSoba.setTipSobe(tip);
+                sobaRepository.save(postojecaSoba);
+                logger.info("Sobi '{}' dodat tip sobe '{}'.", opis, tip.getNaziv());
+            }
         }
     }
 
