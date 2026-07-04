@@ -21,7 +21,6 @@ public class SobaDTO {
     private String jedinicaMere;
     private Boolean dostupna;
     private Long tipSobeId;
-    private String tipSobe;
     private String tipSobeNaziv;
     private String slikaUrl;
 }
