@@ -13,20 +13,18 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 /**
- * Predstavlja korisnika sistema vile Sorrento.
- *
+ * @author Dusan
+ * Predstavlja korisnika sistema vile Sorrento.*
  * Korisnik moze imati ulogu klijenta ili administratora. Klijent kreira i
  * pregleda svoje rezervacije, dok administrator upravlja sobama, klijentima i
  * rezervacijama.
  */
 @Entity //markiram klasu kao JPA entity
 @Data //uz pomoc lomboka smanjujem boiler plate kod i kreiram getere, setere, equals, toString i hashCode automatski
-@NoArgsConstructor // Program sam kreira besparametarske konstruktore
-@AllArgsConstructor // Program sam kreira parametarske konstruktore gde su parametri sva polja klase
+@NoArgsConstructor // Program sam kreira besparametarski konstruktor
+@AllArgsConstructor // Program sam kreira parametarski konstruktor gde su parametri sva polja klase
 @Table(name = "app_user") // Specificiram ime tabele da ne bi doslo do konflikta sa rezervisanom reci user
 @EqualsAndHashCode(callSuper = false, exclude = {"rezervacije"})
-
-
 public class User {
     @Id // Oznacavam idUSer lap primarni kljuc
     @GeneratedValue(strategy = GenerationType.IDENTITY) // auto-increment opcija za idUser

@@ -4,11 +4,6 @@
  */
 package com.dusan.villa_sorrento_backend.controller;
 
-/**
- *
- * @author Dusan
- */
-
 import com.dusan.villa_sorrento_backend.dto.SobaDTO;
 import com.dusan.villa_sorrento_backend.service.SobaService;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,7 +16,10 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-
+/**
+ * @author Dusan
+ * REST kontroler za upravljanje sobama.
+ */
 @RestController
 @RequestMapping("/api/sobe")
 public class SobaController {

@@ -16,8 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
+ * @author Dusan
  * Predstavlja kategoriju sobe u vili Sorrento.
- *
  * Tip sobe definise naziv, opis i kapacitet koji se mogu koristiti za vise
  * konkretnih soba.
  */

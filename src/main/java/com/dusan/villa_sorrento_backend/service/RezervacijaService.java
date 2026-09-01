@@ -36,8 +36,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
- * @author Dusan
+ * Servis za sistemske operacije sa rezervacijama.
+ * Obuhvata kreiranje rezervacije, proveru zauzetosti soba, povezivanje gostiju
+ * i usluga, pretragu rezervacija, ponistavanje rezervacije i dodavanje placanja.
  */
 @Service
 public class RezervacijaService {
@@ -69,10 +70,8 @@ public class RezervacijaService {
 
     /**
      * Kreira rezervaciju za korisnika sa jednom ili vise stavki.
-     *
      * Metoda proverava dostupnost soba, povezuje stavke sa gostima i uslugama,
      * racuna iznos svake stavke i ukupan iznos rezervacije.
-     *
      * @param userId identifikator korisnika koji kreira rezervaciju
      * @param stavkeDTO stavke rezervacije
      * @return sacuvana rezervacija
@@ -143,26 +142,46 @@ public class RezervacijaService {
                 .collect(Collectors.toSet());
     }
     
-    // SK13: Pretraga rezervacija (admin, klijent)
+    /**
+     * Vraca sve rezervacije u sistemu.
+     *
+     * @return lista rezervacija
+     */
     public List<RezervacijaDTO> getAllRezervacije() {
         return rezervacijaRepository.findAll().stream()
                 .map(rezervacijaMapper::rezervacijaToRezervacijaDTO)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Pronalazi rezervaciju po identifikatoru.
+     *
+     * @param id identifikator rezervacije
+     * @return pronadjena rezervacija
+     */
     public RezervacijaDTO getRezervacijaById(Long id) {
         return rezervacijaRepository.findById(id)
                 .map(rezervacijaMapper::rezervacijaToRezervacijaDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Rezervacija sa ID " + id + " nije pronađena."));
     }
 
+    /**
+     * Vraca rezervacije koje pripadaju odredjenom korisniku.
+     *
+     * @param userId identifikator korisnika
+     * @return lista korisnikovih rezervacija
+     */
     public List<RezervacijaDTO> getRezervacijeByUserId(Long userId) {
         return rezervacijaRepository.findByUserIdUser(userId).stream()
                 .map(rezervacijaMapper::rezervacijaToRezervacijaDTO)
                 .collect(Collectors.toList());
     }
 
-    // SK14: Poništavanje rezervacije (admin, klijent)
+    /**
+     * Ponistava rezervaciju i brise povezane stavke i placanja.
+     *
+     * @param rezervacijaId identifikator rezervacije
+     */
     @Transactional
     public void cancelRezervacija(Long rezervacijaId) {
         Rezervacija rezervacija = rezervacijaRepository.findById(rezervacijaId)
@@ -172,6 +191,13 @@ public class RezervacijaService {
     }
     
     
+    /**
+     * Dodaje placanje na postojecu rezervaciju.
+     *
+     * @param rezervacijaId identifikator rezervacije
+     * @param paymentDto podaci o placanju
+     * @return sacuvano placanje
+     */
     @Transactional
     public PlacanjeDTO addPaymentToRezervacija(Long rezervacijaId, PlacanjeDTO paymentDto) {
         // delegira se na PlacanjeService

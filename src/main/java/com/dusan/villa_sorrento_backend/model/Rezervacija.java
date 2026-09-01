@@ -14,11 +14,10 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 /**
+ * @author Dusan
  * Predstavlja rezervaciju koju kreira korisnik sistema.
- *
  * Rezervacija objedinjuje jednu ili vise stavki rezervacije, ukupni iznos,
- * datum kreiranja i placanja. Gosti nisu direktno vezani za rezervaciju, vec za
- * konkretne stavke rezervacije, jer isti gost moze biti u vise stavki.
+ * datum kreiranja i placanja.
  */
 @Entity 
 @Data 
@@ -26,7 +25,6 @@ import lombok.ToString;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false, exclude = {"user", "placanja", "stavkeRezervacije"})
 public class Rezervacija {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long idRezervacija;
@@ -49,6 +47,4 @@ public class Rezervacija {
     @OneToMany(mappedBy = "rezervacija", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
     private Set<StavkaRezervacije> stavkeRezervacije;
-    
-    
 }

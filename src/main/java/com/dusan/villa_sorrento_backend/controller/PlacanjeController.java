@@ -1,14 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.dusan.villa_sorrento_backend.controller;
-
-/**
- *
- * @author Dusan
- */
-
 
 import com.dusan.villa_sorrento_backend.dto.PlacanjeDTO;
 import com.dusan.villa_sorrento_backend.service.PlacanjeService;
@@ -19,6 +9,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * @author Dusan
+ * REST kontroler za upravljanje placanjima.
+ */
 @RestController
 @RequestMapping("/api/placanja")
 public class PlacanjeController {

@@ -13,8 +13,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 /**
- * Predstavlja placanje povezano sa rezervacijom.
- *
+ * @author Dusan
+ * Predstavlja placanje povezano sa rezervacijom.*
  * Placanje cuva nacin placanja, status, iznos i datum placanja. Jedna
  * rezervacija moze imati vise evidentiranih placanja.
  */
@@ -46,7 +46,4 @@ public class Placanje {
     @JoinColumn(name = "rezervacija_id", nullable = false) //spoljni kljuc
     @ToString.Exclude
     private Rezervacija rezervacija;
-    
-    
-
 }

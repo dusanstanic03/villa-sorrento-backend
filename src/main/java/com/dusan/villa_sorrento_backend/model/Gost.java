@@ -16,11 +16,9 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
+ * @author Dusan
  * Predstavlja gosta koji boravi u sobi u okviru stavke rezervacije.
- *
- * Gost nije isto sto i klijent. Klijent pravi rezervaciju, a gosti su
- * osobe koje borave u rezervisanim sobama. Isti gost moze biti povezan
- * sa vise stavki rezervacije.
+ * Gost ne mora biti klijent, tj. osoba koja pravi rezervaciju ali moze.
  */
 @Entity
 @Data

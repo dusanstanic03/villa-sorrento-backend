@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST kontroler za upravljanje dodatnim uslugama.
+ * @author Dusan
+ * REST kontroler za upravljanje uslugama.
  */
 @RestController
 @RequestMapping("/api/usluge")

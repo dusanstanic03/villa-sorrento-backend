@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 /**
- * Servis za sistemske operacije nad gostima.
+ * Servis za sistemske operacije sa gostima.
  */
 @Service
 public class GostService {
