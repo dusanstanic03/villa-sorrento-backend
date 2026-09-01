@@ -16,8 +16,9 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 /**
- *
- * @author Dusan
+ * Servis za sistemske operacije sa klijentima.
+ * Obuhvata prijavu, registraciju klijenta, kreiranje od strane admina,
+ * pretragu, izmenu i brisanje klijenata.
  */
 @Service
 public class UserService {
@@ -34,7 +35,13 @@ public class UserService {
     
     
     
-    //SK1 - Prijava korisnika
+    /**
+     * Prijavljuje kljenta na osnovu korisnickog imena i lozinke.
+     *
+     * @param username korisnicko ime
+     * @param password lozinka
+     * @return prijavljeni klijent ako su kredencijali ispravni
+     */
     public Optional<UserDTO> loginUser(String username, String password){
         Optional<User> userOptional = userRepository.findByUsername(username);
         if(userOptional.isPresent()){
@@ -46,7 +53,12 @@ public class UserService {
         return Optional.empty();
     }
     
-    //SK2 - Registracija klijenta
+    /**
+     * Registruje novog klijenta.
+     *
+     * @param registracijaDTO podaci za registraciju
+     * @return registrovani klijent
+     */
     public UserDTO registerUser(UserRegistracijaDTO registracijaDTO){
         if(userRepository.existsByUsername(registracijaDTO.getUsername())){
             throw new IllegalArgumentException("Korisnicko ime je vec zauzeto.");
@@ -58,7 +70,11 @@ public class UserService {
         return userMapper.userToUserDTO(savedUser);
     }
     
-    //SK9 - Pretraga klijenata
+    /**
+     * Vraca sve klijente.
+     *
+     * @return lista klijenata
+     */
     public List<UserDTO> getAllUsers(){
         List<User> users = userRepository.findAll();
         List<UserDTO> userDTOs = new ArrayList<>();
@@ -69,28 +85,43 @@ public class UserService {
         return userDTOs;
     }
     
+    /**
+     * Pronalazi klijenta po identifikatoru.
+     *
+     * @param id identifikator klijenta
+     * @return pronadjeni klijent
+     */
     public UserDTO getUserById(Long id) {
        
         Optional<User> optionalUser = userRepository.findById(id);
 
         if (optionalUser.isEmpty()) { 
-            throw new EntityNotFoundException("Korisnik sa ID " + id + " nije pronađen.");
+            throw new EntityNotFoundException("Klijent sa ID " + id + " nije pronađen.");
         }
         User user = optionalUser.get();
-        UserDTO dto = userMapper.userToUserDTO(user);
-        return dto;
+        return userMapper.userToUserDTO(user);
     }
     
-    //SK10 - Kreiranje klijenata od strane admina
+    /**
+     * Kreira klijenta kroz admin deo aplikacije.
+     *
+     * @param registracijaDTO podaci za kreiranje klijenta
+     * @return kreirani klijent
+     */
     public UserDTO createUserByAdmin(UserRegistracijaDTO registracijaDTO){
-        
-        return registerUser(registracijaDTO); //iz SK2
+        return registerUser(registracijaDTO);
     }
     
-    //SK12 - Izmena klijenta od strane admina
+    /**
+     * Azurira podatke postojeceg klijenta.
+     *
+     * @param id identifikator klijenta
+     * @param userDTO novi podaci o klijentu
+     * @return azurirani klijent
+     */
     public UserDTO updateUser(Long id, UserDTO userDTO){
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Korisnik sa ID " + id + " nije pronađen."));
+                .orElseThrow(() -> new EntityNotFoundException("Klijent sa ID " + id + " nije pronađen."));
         
         //azuriramo samo polja koja su dozvoljena za izmenu
         existingUser.setUsername(userDTO.getUsername());
@@ -102,10 +133,14 @@ public class UserService {
         return userMapper.userToUserDTO(updatedUser);
     }
     
-    //SK11 - Brisanje klijenta
+    /**
+     * Brise klijenta po identifikatoru.
+     *
+     * @param id identifikator klijenta
+     */
     public void deleteUser(Long id){
         if(!userRepository.existsById(id)){
-            throw new EntityNotFoundException("Korisnik sa ID " + id + " nije pronađen.");
+            throw new EntityNotFoundException("Klijent sa ID " + id + " nije pronađen.");
         }
         userRepository.deleteById(id);
     }

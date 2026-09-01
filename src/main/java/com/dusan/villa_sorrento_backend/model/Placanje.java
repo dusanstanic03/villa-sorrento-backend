@@ -4,10 +4,6 @@
  */
 package com.dusan.villa_sorrento_backend.model;
 
-/**
- *
- * @author Dusan
- */
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import lombok.Data;
@@ -16,6 +12,12 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+/**
+ * @author Dusan
+ * Predstavlja placanje povezano sa rezervacijom.*
+ * Placanje cuva nacin placanja, status, iznos i datum placanja. Jedna
+ * rezervacija moze imati vise evidentiranih placanja.
+ */
 @Entity
 @Data
 @NoArgsConstructor
@@ -44,7 +46,4 @@ public class Placanje {
     @JoinColumn(name = "rezervacija_id", nullable = false) //spoljni kljuc
     @ToString.Exclude
     private Rezervacija rezervacija;
-    
-    
-
 }

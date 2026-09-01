@@ -12,10 +12,14 @@ import com.dusan.villa_sorrento_backend.mapper.StavkaRezervacijeMapper;
 import com.dusan.villa_sorrento_backend.model.Rezervacija;
 import com.dusan.villa_sorrento_backend.model.Soba;
 import com.dusan.villa_sorrento_backend.model.StavkaRezervacije;
+import com.dusan.villa_sorrento_backend.model.Gost;
+import com.dusan.villa_sorrento_backend.model.Usluga;
 import com.dusan.villa_sorrento_backend.model.User;
+import com.dusan.villa_sorrento_backend.repository.GostRepository;
 import com.dusan.villa_sorrento_backend.repository.RezervacijaRepository;
 import com.dusan.villa_sorrento_backend.repository.SobaRepository;
 import com.dusan.villa_sorrento_backend.repository.StavkaRezervacijeRepository;
+import com.dusan.villa_sorrento_backend.repository.UslugaRepository;
 import com.dusan.villa_sorrento_backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -26,15 +30,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
- * @author Dusan
+ * Servis za sistemske operacije sa rezervacijama.
+ * Obuhvata kreiranje rezervacije, proveru zauzetosti soba, povezivanje gostiju
+ * i usluga, pretragu rezervacija, ponistavanje rezervacije i dodavanje placanja.
  */
 @Service
 public class RezervacijaService {
@@ -45,12 +49,14 @@ public class RezervacijaService {
     private final RezervacijaMapper rezervacijaMapper;
     private final StavkaRezervacijeMapper stavkaRezervacijeMapper;
     private final PlacanjeService placanjeService;
+    private final GostRepository gostRepository;
+    private final UslugaRepository uslugaRepository;
     
     public RezervacijaService(RezervacijaRepository rezervacijaRepository, 
             UserRepository userRepository, SobaRepository sobaRepository, 
             StavkaRezervacijeRepository stavkaRezervacijeRepository, 
             RezervacijaMapper rezervacijaMapper, StavkaRezervacijeMapper stavkaRezervacijeMapper, 
-            PlacanjeService placanjeService) {
+            PlacanjeService placanjeService, GostRepository gostRepository, UslugaRepository uslugaRepository) {
         this.rezervacijaRepository = rezervacijaRepository;
         this.userRepository = userRepository;
         this.sobaRepository = sobaRepository;
@@ -58,9 +64,18 @@ public class RezervacijaService {
         this.rezervacijaMapper = rezervacijaMapper;
         this.stavkaRezervacijeMapper = stavkaRezervacijeMapper;
         this.placanjeService = placanjeService;
+        this.gostRepository = gostRepository;
+        this.uslugaRepository = uslugaRepository;
     }
-     
-    //SK4 - Kreiranje rezervacije(moze da ima vise stavki)
+
+    /**
+     * Kreira rezervaciju za korisnika sa jednom ili vise stavki.
+     * Metoda proverava dostupnost soba, povezuje stavke sa gostima i uslugama,
+     * racuna iznos svake stavke i ukupan iznos rezervacije.
+     * @param userId identifikator korisnika koji kreira rezervaciju
+     * @param stavkeDTO stavke rezervacije
+     * @return sacuvana rezervacija
+     */
     @Transactional //treba nam za transakcije koje imaju vise operacija
     public RezervacijaDTO createRezervacija(Long userId, Set<StavkaRezervacijeDTO> stavkeDTO) {
         User user = userRepository.findById(userId)
@@ -89,10 +104,13 @@ public class RezervacijaService {
             stavka.setRezervacija(novaRezervacija); // Postavljamo referencu na rezervaciju
             stavka.setSoba(soba); // Postavljamo referencu na sobu
             stavka.setRb(rbBrojac++);
+            stavka.setGosti(resolveGosti(stavkaDTO.getGostIds()));
+            stavka.setUsluge(resolveUsluge(stavkaDTO.getUslugaIds()));
 
             // Izračunaj iznos stavke
             long brojNocenja = ChronoUnit.DAYS.between(stavka.getDatumOd(), stavka.getDatumDo());
-            double iznosStavke = brojNocenja * soba.getCena();
+            double iznosUsluga = stavka.getUsluge().stream().mapToDouble(Usluga::getCena).sum();
+            double iznosStavke = brojNocenja * soba.getCena() + iznosUsluga;
             stavka.setIznos(iznosStavke);
             ukupanIznos += iznosStavke;
 
@@ -103,27 +121,67 @@ public class RezervacijaService {
         Rezervacija savedRezervacija = rezervacijaRepository.save(novaRezervacija);
         return rezervacijaMapper.rezervacijaToRezervacijaDTO(savedRezervacija);
     }
+
+    private Set<Gost> resolveGosti(Set<Long> gostIds) {
+        if (gostIds == null || gostIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        return gostIds.stream()
+                .map(id -> gostRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Gost sa ID " + id + " nije pronađen.")))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Usluga> resolveUsluge(Set<Long> uslugaIds) {
+        if (uslugaIds == null || uslugaIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        return uslugaIds.stream()
+                .map(id -> uslugaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usluga sa ID " + id + " nije pronađena.")))
+                .collect(Collectors.toSet());
+    }
     
-    // SK13: Pretraga rezervacija (admin, klijent)
+    /**
+     * Vraca sve rezervacije u sistemu.
+     *
+     * @return lista rezervacija
+     */
     public List<RezervacijaDTO> getAllRezervacije() {
         return rezervacijaRepository.findAll().stream()
                 .map(rezervacijaMapper::rezervacijaToRezervacijaDTO)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Pronalazi rezervaciju po identifikatoru.
+     *
+     * @param id identifikator rezervacije
+     * @return pronadjena rezervacija
+     */
     public RezervacijaDTO getRezervacijaById(Long id) {
         return rezervacijaRepository.findById(id)
                 .map(rezervacijaMapper::rezervacijaToRezervacijaDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Rezervacija sa ID " + id + " nije pronađena."));
     }
 
+    /**
+     * Vraca rezervacije koje pripadaju odredjenom korisniku.
+     *
+     * @param userId identifikator korisnika
+     * @return lista korisnikovih rezervacija
+     */
     public List<RezervacijaDTO> getRezervacijeByUserId(Long userId) {
         return rezervacijaRepository.findByUserIdUser(userId).stream()
                 .map(rezervacijaMapper::rezervacijaToRezervacijaDTO)
                 .collect(Collectors.toList());
     }
 
-    // SK14: Poništavanje rezervacije (admin, klijent)
+    /**
+     * Ponistava rezervaciju i brise povezane stavke i placanja.
+     *
+     * @param rezervacijaId identifikator rezervacije
+     */
     @Transactional
     public void cancelRezervacija(Long rezervacijaId) {
         Rezervacija rezervacija = rezervacijaRepository.findById(rezervacijaId)
@@ -133,6 +191,13 @@ public class RezervacijaService {
     }
     
     
+    /**
+     * Dodaje placanje na postojecu rezervaciju.
+     *
+     * @param rezervacijaId identifikator rezervacije
+     * @param paymentDto podaci o placanju
+     * @return sacuvano placanje
+     */
     @Transactional
     public PlacanjeDTO addPaymentToRezervacija(Long rezervacijaId, PlacanjeDTO paymentDto) {
         // delegira se na PlacanjeService

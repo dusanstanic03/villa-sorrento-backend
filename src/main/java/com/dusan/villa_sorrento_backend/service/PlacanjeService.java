@@ -4,12 +4,6 @@
  */
 package com.dusan.villa_sorrento_backend.service;
 
-/**
- *
- * @author Dusan
- */
-
-
 import com.dusan.villa_sorrento_backend.dto.PlacanjeDTO;
 import com.dusan.villa_sorrento_backend.mapper.PlacanjeMapper;
 import com.dusan.villa_sorrento_backend.model.Placanje;
@@ -24,6 +18,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servis za sistemske operacije sa placanjima.
+ * Obuhvata evidentiranje placanja, promenu statusa, pregled placanja i obracun
+ * ukupno placenog iznosa za rezervaciju.
+ */
 @Service
 public class PlacanjeService {
     private final PlacanjeRepository placanjeRepository;
@@ -36,7 +35,13 @@ public class PlacanjeService {
         this.placanjeMapper = placanjeMapper;
     }
 
-    // Kreiranje novog plaćanja za rezervaciju
+    /**
+     * Kreira novo placanje za rezervaciju.
+     *
+     * @param rezervacijaId identifikator rezervacije
+     * @param placanjeDTO podaci o placanju
+     * @return sacuvano placanje
+     */
     @Transactional
     public PlacanjeDTO createPlacanje(Long rezervacijaId, PlacanjeDTO placanjeDTO) {
         Rezervacija rezervacija = rezervacijaRepository.findById(rezervacijaId)
@@ -55,7 +60,13 @@ public class PlacanjeService {
         return placanjeMapper.placanjeToPlacanjeDTO(savedPlacanje);
     }
 
-    // Ažuriranje statusa plaćanja (npr. iz PENDING u COMPLETED)
+    /**
+     * Azurira status postojeceg placanja.
+     *
+     * @param placanjeId identifikator placanja
+     * @param newStatus novi status placanja
+     * @return azurirano placanje
+     */
     @Transactional
     public PlacanjeDTO updateStatusPlacanja(Long placanjeId, String newStatus) {
         Placanje placanje = placanjeRepository.findById(placanjeId)
@@ -66,14 +77,23 @@ public class PlacanjeService {
         return placanjeMapper.placanjeToPlacanjeDTO(updatedPlacanje);
     }
 
-    // Prikaz svih plaćanja za određenu rezervaciju
+    /**
+     * Vraca sva placanja za odredjenu rezervaciju.
+     *
+     * @param rezervacijaId identifikator rezervacije
+     * @return lista placanja za rezervaciju
+     */
     public List<PlacanjeDTO> getPlacanjaByRezervacijaId(Long rezervacijaId) {
         return placanjeRepository.findByRezervacija_IdRezervacija(rezervacijaId).stream()
                 .map(placanjeMapper::placanjeToPlacanjeDTO)
                 .collect(Collectors.toList());
     }
 
-    // Admin pregled svih plaćanja
+    /**
+     * Vraca sva placanja u sistemu.
+     *
+     * @return lista placanja
+     */
     public List<PlacanjeDTO> getAllPlacanja() {
         return placanjeRepository.findAll().stream()
                 .map(placanjeMapper::placanjeToPlacanjeDTO)
@@ -81,13 +101,24 @@ public class PlacanjeService {
     }
 
     
+    /**
+     * Pronalazi placanje po identifikatoru.
+     *
+     * @param id identifikator placanja
+     * @return pronadjeno placanje
+     */
     public PlacanjeDTO getPlacanjeById(Long id) {
         return placanjeRepository.findById(id)
                 .map(placanjeMapper::placanjeToPlacanjeDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Plaćanje sa ID " + id + " nije pronađeno."));
     }
 
-    // Calculate total paid for a reservation
+    /**
+     * Racuna ukupan iznos uspesno obradjenih placanja za rezervaciju.
+     *
+     * @param rezervacijaId identifikator rezervacije
+     * @return ukupno placeni iznos
+     */
     public Double calculateTotalPaidForReservation(Long rezervacijaId) {
         List<Placanje> placanja = placanjeRepository.findByRezervacija_IdRezervacija(rezervacijaId);
         return placanja.stream()

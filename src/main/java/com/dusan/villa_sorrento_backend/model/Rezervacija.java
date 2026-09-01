@@ -4,10 +4,6 @@
  */
 package com.dusan.villa_sorrento_backend.model;
 
-/**
- *
- * @author Dusan
- */
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -17,16 +13,18 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-
-
-
+/**
+ * @author Dusan
+ * Predstavlja rezervaciju koju kreira korisnik sistema.
+ * Rezervacija objedinjuje jednu ili vise stavki rezervacije, ukupni iznos,
+ * datum kreiranja i placanja.
+ */
 @Entity 
 @Data 
 @NoArgsConstructor 
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false, exclude = {"user", "placanja", "stavkeRezervacije"})
 public class Rezervacija {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long idRezervacija;
@@ -49,6 +47,4 @@ public class Rezervacija {
     @OneToMany(mappedBy = "rezervacija", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
     private Set<StavkaRezervacije> stavkeRezervacije;
-    
-    
 }

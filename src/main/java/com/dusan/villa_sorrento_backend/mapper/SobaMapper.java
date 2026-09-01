@@ -4,28 +4,30 @@
  */
 package com.dusan.villa_sorrento_backend.mapper;
 
-/**
- *
- * @author Dusan
- */
 
 import com.dusan.villa_sorrento_backend.dto.SobaDTO;
 import com.dusan.villa_sorrento_backend.model.Soba;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
 
+/**
+ *
+ * @author Dusan
+ */
 @Mapper(componentModel = "spring")
 public interface SobaMapper {
-    SobaMapper INSTANCE = Mappers.getMapper(SobaMapper.class);
 
+    @Mapping(source = "tipSobe.idTipSobe", target = "tipSobeId")
+    @Mapping(source = "tipSobe.naziv", target = "tipSobeNaziv")
     SobaDTO sobaToSobaDTO(Soba soba);
     
     @Mapping(target = "stavkeRezervacije", ignore = true)
+    @Mapping(target = "tipSobe", ignore = true)
     Soba sobaDTOToSoba(SobaDTO sobaDTO);
 
     @Mapping(target = "idSoba", ignore = true)
     @Mapping(target = "stavkeRezervacije", ignore = true)
+    @Mapping(target = "tipSobe", ignore = true)
     void updateSobaFromDto(SobaDTO sobaDTO, @MappingTarget Soba soba);
 }
