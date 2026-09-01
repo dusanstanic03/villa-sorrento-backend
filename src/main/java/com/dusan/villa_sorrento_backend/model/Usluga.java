@@ -16,9 +16,9 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * Predstavlja uslugu koju gost moze izabrati uz stavku rezervacije.
- *
- * Usluge prosiruju osnovnu cenu smestaja, na primer dorucak, parking ili spa
+ * @author Dusan
+ * Predstavlja usluge koje gost moze izabrati uz stavku rezervacije.
+ * Usluge povecavaju osnovnu cenu smestaja, na primer dorucak, parking ili spa
  * paket. Aktivne usluge se nude klijentima pri kreiranju rezervacije.
  */
 @Entity

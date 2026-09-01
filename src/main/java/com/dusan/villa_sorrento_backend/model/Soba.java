@@ -14,9 +14,9 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 /**
- * Predstavlja konkretnu sobu koja se moze rezervisati u vili Sorrento.
- *
- * Soba sadrzi cenu, opis, dostupnost i sliku, a njen tip se vodi kao posebna
+ * @author Dusan
+ * Predstavlja konkretnu sobu koja se moze rezervisati u vili Sorrento.*
+ * Soba sadrzi cenu, opis, dostupnost, urlSlike, jedinicu mere, a njen tip se vodi kao posebna
  * domenska klasa {@link TipSobe}. Jedna soba moze biti obuhvacena kroz vise
  * stavki rezervacije u razlicitim vremenskim periodima.
  */
@@ -38,20 +38,19 @@ public class Soba {
     @Column(nullable = false) 
     private Double cena;
 
-    
     @Column(nullable = false)
     private String jedinicaMere;
 
     @Column(nullable = false)
     private Boolean dostupna;
 
+    @Column(nullable = false)
+    private String slikaUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tip_sobe_id")
     @ToString.Exclude
     private TipSobe tipSobe;
-    
-    @Column(nullable = false)
-    private String slikaUrl;
     
     @OneToMany(mappedBy = "soba", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude

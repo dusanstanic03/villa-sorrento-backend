@@ -21,8 +21,9 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 /**
- *
- * @author Dusan
+ * Servis za sistemske operacije sa sobama.
+ * Obuhvata kreiranje, izmenu, brisanje, pregled i pretragu dostupnih soba po
+ * periodu i filterima.
  */
 @Service
 public class SobaService {
@@ -70,7 +71,11 @@ public class SobaService {
         return sobaMapper.sobaToSobaDTO(updatedSoba);
     }
 
-    // SK8: Brisanje sobe (admin)
+    /**
+     * Brise sobu po identifikatoru.
+     *
+     * @param id identifikator sobe
+     */
     public void deleteSoba(Long id) {
         if (!sobaRepository.existsById(id)) {
             throw new EntityNotFoundException("Soba sa ID " + id + " nije pronađena.");

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 /**
- * Servis za sistemske operacije nad tipovima soba.
+ * Servis za sistemske operacije sa tipovima soba.
  */
 @Service
 public class TipSobeService {

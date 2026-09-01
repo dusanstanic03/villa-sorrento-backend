@@ -4,10 +4,6 @@
  */
 package com.dusan.villa_sorrento_backend.controller;
 
-/**
- *
- * @author Dusan
- */
 
 import com.dusan.villa_sorrento_backend.dto.PlacanjeDTO;
 import com.dusan.villa_sorrento_backend.dto.RezervacijaDTO;
@@ -22,6 +18,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author Dusan
+ * REST kontroler za upravljanje rezervacijama.
+ */
 
 @RestController
 @RequestMapping("/api/rezervacije")

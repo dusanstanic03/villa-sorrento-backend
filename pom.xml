@@ -148,6 +148,8 @@
                     <encoding>UTF-8</encoding>
                     <docencoding>UTF-8</docencoding>
                     <charset>UTF-8</charset>
+                    <subpackages>com.dusan.villa_sorrento_backend.model:com.dusan.villa_sorrento_backend.service</subpackages>
+                    <doclint>none</doclint>
                 </configuration>
             </plugin>
         </plugins>

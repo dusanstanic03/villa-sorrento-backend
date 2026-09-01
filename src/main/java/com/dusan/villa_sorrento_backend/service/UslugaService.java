@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 /**
- * Servis za sistemske operacije nad dodatnim uslugama.
+ * Servis za sistemske operacije sa uslugama.
  */
 @Service
 public class UslugaService {

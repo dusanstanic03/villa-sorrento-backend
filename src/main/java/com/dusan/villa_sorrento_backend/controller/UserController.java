@@ -4,10 +4,7 @@
  */
 package com.dusan.villa_sorrento_backend.controller;
 
-/**
- *
- * @author Dusan
- */
+
 
 
 import com.dusan.villa_sorrento_backend.dto.UserDTO;
@@ -22,7 +19,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
+/**
+ * @author Dusan
+ * REST kontroler za upravljanje user-ima.
+ */
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:3000")
