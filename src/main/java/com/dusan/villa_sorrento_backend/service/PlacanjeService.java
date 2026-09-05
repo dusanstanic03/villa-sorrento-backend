@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
  * Servis za sistemske operacije sa placanjima.
  * Obuhvata evidentiranje placanja, promenu statusa, pregled placanja i obracun
  * ukupno placenog iznosa za rezervaciju.
+ *
+ * @author Dusan
  */
 @Service
 public class PlacanjeService {
@@ -37,10 +39,16 @@ public class PlacanjeService {
 
     /**
      * Kreira novo placanje za rezervaciju.
+     * Metoda prvo pronalazi rezervaciju za koju se evidentira placanje. Zatim mapira
+     * DTO u domenski objekat placanja, povezuje placanje sa rezervacijom i postavlja
+     * datum placanja na danasnji datum. Ako status placanja nije prosledjen, postavlja
+     * se podrazumevani status PENDING. Nakon cuvanja u bazi vraca se DTO sacuvanog
+     * placanja.
      *
-     * @param rezervacijaId identifikator rezervacije
-     * @param placanjeDTO podaci o placanju
-     * @return sacuvano placanje
+     * @param rezervacijaId identifikator rezervacije za koju se evidentira placanje
+     * @param placanjeDTO podaci o placanju koje treba evidentirati
+     * @return sacuvano placanje u formi DTO-a
+     * @throws EntityNotFoundException ako rezervacija sa zadatim identifikatorom ne postoji
      */
     @Transactional
     public PlacanjeDTO createPlacanje(Long rezervacijaId, PlacanjeDTO placanjeDTO) {
@@ -62,10 +70,14 @@ public class PlacanjeService {
 
     /**
      * Azurira status postojeceg placanja.
+     * Metoda pronalazi placanje po identifikatoru, postavlja novi status i cuva
+     * izmenjeno placanje u bazi. Koristi se kada se status placanja promeni, na
+     * primer iz PENDING u COMPLETED.
      *
-     * @param placanjeId identifikator placanja
+     * @param placanjeId identifikator placanja koje se azurira
      * @param newStatus novi status placanja
-     * @return azurirano placanje
+     * @return azurirano placanje u formi DTO-a
+     * @throws EntityNotFoundException ako placanje sa zadatim identifikatorom ne postoji
      */
     @Transactional
     public PlacanjeDTO updateStatusPlacanja(Long placanjeId, String newStatus) {
@@ -79,9 +91,11 @@ public class PlacanjeService {
 
     /**
      * Vraca sva placanja za odredjenu rezervaciju.
+     * Metoda pronalazi placanja povezana sa rezervacijom ciji je identifikator
+     * prosledjen i mapira ih u DTO objekte.
      *
-     * @param rezervacijaId identifikator rezervacije
-     * @return lista placanja za rezervaciju
+     * @param rezervacijaId identifikator rezervacije za koju se pretrazuju placanja
+     * @return lista placanja za zadatu rezervaciju
      */
     public List<PlacanjeDTO> getPlacanjaByRezervacijaId(Long rezervacijaId) {
         return placanjeRepository.findByRezervacija_IdRezervacija(rezervacijaId).stream()
@@ -90,9 +104,11 @@ public class PlacanjeService {
     }
 
     /**
-     * Vraca sva placanja u sistemu.
+     * Vraca sva placanja iz sistema.
+     * Metoda ucitava sva placanja iz baze, mapira ih u DTO objekte i vraca listu.
+     * Koristi se za pregled placanja od strane admina.
      *
-     * @return lista placanja
+     * @return lista svih placanja u formi DTO objekata
      */
     public List<PlacanjeDTO> getAllPlacanja() {
         return placanjeRepository.findAll().stream()
@@ -100,12 +116,15 @@ public class PlacanjeService {
                 .collect(Collectors.toList());
     }
 
-    
+
     /**
      * Pronalazi placanje po identifikatoru.
+     * Metoda pretrazuje bazu po identifikatoru placanja. Ako placanje postoji,
+     * vraca se njegov DTO prikaz. Ako ne postoji, baca se izuzetak.
      *
-     * @param id identifikator placanja
-     * @return pronadjeno placanje
+     * @param id identifikator placanja koje se pretrazuje
+     * @return pronadjeno placanje predstavljeno kao DTO
+     * @throws EntityNotFoundException ako placanje sa zadatim identifikatorom ne postoji
      */
     public PlacanjeDTO getPlacanjeById(Long id) {
         return placanjeRepository.findById(id)
@@ -115,9 +134,12 @@ public class PlacanjeService {
 
     /**
      * Racuna ukupan iznos uspesno obradjenih placanja za rezervaciju.
+     * Metoda ucitava sva placanja za zadatu rezervaciju i sabira samo placanja
+     * ciji je status COMPLETED ili PROCESSED. Placanja sa drugim statusima se ne
+     * ukljucuju u zbir.
      *
-     * @param rezervacijaId identifikator rezervacije
-     * @return ukupno placeni iznos
+     * @param rezervacijaId identifikator rezervacije za koju se racuna placeni iznos
+     * @return ukupan iznos uspesno obradjenih placanja
      */
     public Double calculateTotalPaidForReservation(Long rezervacijaId) {
         List<Placanje> placanja = placanjeRepository.findByRezervacija_IdRezervacija(rezervacijaId);
