@@ -77,8 +77,13 @@ public class UslugaService {
     /**
      * Pronalazi uslugu po identifikatoru.
      *
-     * @param id identifikator usluge
-     * @return pronadjena usluga
+     * Metoda pretrazuje bazu po identifikatoru usluge. Ako usluga postoji,
+     * mapira se u DTO i vraca kao rezultat. Ako usluga ne postoji, baca se
+     * izuzetak.
+     *
+     * @param id identifikator usluge koja se pretrazuje
+     * @return pronadjena usluga predstavljena kao DTO
+     * @throws EntityNotFoundException ako usluga sa zadatim identifikatorom ne postoji
      */
     public UslugaDTO getUslugaById(Long id) {
         return uslugaRepository.findById(id)

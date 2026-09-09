@@ -139,6 +139,101 @@ class RezervacijaServiceTest {
     }
 
     @Test
+    void testCreateRezervacijaThrowsWhenSobaDoesNotExist() {
+        User user = new User();
+        StavkaRezervacijeDTO stavkaDTO = new StavkaRezervacijeDTO(
+                null,
+                0,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 4),
+                null,
+                99L,
+                Set.of(),
+                Set.of(),
+                null,
+                null
+        );
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(sobaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> rezervacijaService.createRezervacija(1L, Set.of(stavkaDTO)));
+    }
+
+    @Test
+    void testCreateRezervacijaThrowsWhenGostDoesNotExist() {
+        User user = new User();
+        Soba soba = new Soba();
+        soba.setIdSoba(1L);
+        soba.setCena(100.0);
+        soba.setOpis("Soba");
+
+        StavkaRezervacijeDTO stavkaDTO = new StavkaRezervacijeDTO(
+                null,
+                0,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 4),
+                null,
+                1L,
+                Set.of(99L),
+                Set.of(),
+                null,
+                null
+        );
+
+        StavkaRezervacije stavka = new StavkaRezervacije();
+        stavka.setDatumOd(stavkaDTO.getDatumOd());
+        stavka.setDatumDo(stavkaDTO.getDatumDo());
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(sobaRepository.findById(1L)).thenReturn(Optional.of(soba));
+        when(stavkaRezervacijeRepository.findOverlappingReservations(1L, stavkaDTO.getDatumOd(), stavkaDTO.getDatumDo()))
+                .thenReturn(List.of());
+        when(stavkaRezervacijeMapper.stavkaRezervacijeDTOToStavkaRezervacije(stavkaDTO)).thenReturn(stavka);
+        when(gostRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> rezervacijaService.createRezervacija(1L, Set.of(stavkaDTO)));
+    }
+
+    @Test
+    void testCreateRezervacijaThrowsWhenUslugaDoesNotExist() {
+        User user = new User();
+        Soba soba = new Soba();
+        soba.setIdSoba(1L);
+        soba.setCena(100.0);
+        soba.setOpis("Soba");
+
+        StavkaRezervacijeDTO stavkaDTO = new StavkaRezervacijeDTO(
+                null,
+                0,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 4),
+                null,
+                1L,
+                Set.of(),
+                Set.of(99L),
+                null,
+                null
+        );
+
+        StavkaRezervacije stavka = new StavkaRezervacije();
+        stavka.setDatumOd(stavkaDTO.getDatumOd());
+        stavka.setDatumDo(stavkaDTO.getDatumDo());
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(sobaRepository.findById(1L)).thenReturn(Optional.of(soba));
+        when(stavkaRezervacijeRepository.findOverlappingReservations(1L, stavkaDTO.getDatumOd(), stavkaDTO.getDatumDo()))
+                .thenReturn(List.of());
+        when(stavkaRezervacijeMapper.stavkaRezervacijeDTOToStavkaRezervacije(stavkaDTO)).thenReturn(stavka);
+        when(uslugaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> rezervacijaService.createRezervacija(1L, Set.of(stavkaDTO)));
+    }
+
+    @Test
     void testCancelRezervacijaDeletesExistingReservation() {
         Rezervacija rezervacija = new Rezervacija();
         when(rezervacijaRepository.findById(1L)).thenReturn(Optional.of(rezervacija));
@@ -166,6 +261,20 @@ class RezervacijaServiceTest {
         when(rezervacijaMapper.rezervacijaToRezervacijaDTO(rezervacija)).thenReturn(dto);
 
         assertEquals(List.of(dto), rezervacijaService.getRezervacijeByUserId(1L));
+    }
+
+    @Test
+    void testGetRezervacijaByIdThrowsWhenRezervacijaDoesNotExist() {
+        when(rezervacijaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> rezervacijaService.getRezervacijaById(99L));
+    }
+
+    @Test
+    void testCancelRezervacijaThrowsWhenRezervacijaDoesNotExist() {
+        when(rezervacijaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> rezervacijaService.cancelRezervacija(99L));
     }
 
     @Test

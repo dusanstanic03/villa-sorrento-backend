@@ -2,7 +2,7 @@ package com.dusan.villa_sorrento_backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.dusan.villa_sorrento_backend.dto.PlacanjeDTO;
 import com.dusan.villa_sorrento_backend.mapper.PlacanjeMapper;
@@ -71,6 +71,16 @@ class PlacanjeServiceTest {
     }
 
     @Test
+    void testUpdateStatusPlacanjaThrowsWhenPlacanjeDoesNotExist() {
+        when(placanjeRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class,
+                () -> placanjeService.updateStatusPlacanja(99L, "COMPLETED"));
+
+        verify(placanjeRepository, never()).save(any(Placanje.class));
+    }
+
+    @Test
     void testCreatePlacanjeThrowsWhenReservationMissing() {
         when(rezervacijaRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -112,6 +122,17 @@ class PlacanjeServiceTest {
         when(placanjeMapper.placanjeToPlacanjeDTO(placanje)).thenReturn(dto);
 
         assertEquals(List.of(dto), placanjeService.getAllPlacanja());
+    }
+
+    @Test
+    void testGetPlacanjeByIdReturnsDtoWhenExists() {
+        Placanje placanje = new Placanje();
+        PlacanjeDTO dto = new PlacanjeDTO(1L, "COMPLETED", "CARD", 100.0, null, 1L);
+
+        when(placanjeRepository.findById(1L)).thenReturn(Optional.of(placanje));
+        when(placanjeMapper.placanjeToPlacanjeDTO(placanje)).thenReturn(dto);
+
+        assertEquals(dto, placanjeService.getPlacanjeById(1L));
     }
 
     @Test

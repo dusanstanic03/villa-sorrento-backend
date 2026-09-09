@@ -2,8 +2,7 @@ package com.dusan.villa_sorrento_backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.dusan.villa_sorrento_backend.dto.SobaDTO;
 import com.dusan.villa_sorrento_backend.mapper.SobaMapper;
@@ -62,7 +61,7 @@ class SobaServiceTest {
     }
 
     @Test
-    void testCreateSobaThrowsWhenRoomTypeIsMissing() {
+    void testCreateSobaThrowsWhenRoomTypeIdDoesNotExist() {
         SobaDTO input = new SobaDTO(null, "Soba", 100.0, "noc", null, 99L, null, "slika.jpg");
         when(sobaMapper.sobaDTOToSoba(input)).thenReturn(new Soba());
         when(tipSobeRepository.findById(99L)).thenReturn(Optional.empty());
@@ -71,12 +70,45 @@ class SobaServiceTest {
     }
 
     @Test
+    void testCreateSobaThrowsWhenRoomTypeNameDoesNotExist() {
+        SobaDTO input = new SobaDTO(null, "Soba", 100.0, "noc", null, null, "nepoznat", "slika.jpg");
+
+        when(sobaMapper.sobaDTOToSoba(input)).thenReturn(new Soba());
+        when(tipSobeRepository.findByNaziv("nepoznat")).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> sobaService.createSoba(input));
+
+        verify(sobaRepository, never()).save(any(Soba.class));
+    }
+
+    @Test
+    void testCreateSobaThrowsWhenRoomTypeIsNotProvided() {
+        SobaDTO input = new SobaDTO(null, "Soba", 100.0, "noc", null, null, null, "slika.jpg");
+
+        when(sobaMapper.sobaDTOToSoba(input)).thenReturn(new Soba());
+
+        assertThrows(IllegalArgumentException.class, () -> sobaService.createSoba(input));
+
+        verify(sobaRepository, never()).save(any(Soba.class));
+    }
+
+
+    @Test
     void testDeleteSobaDeletesExistingRoom() {
         when(sobaRepository.existsById(1L)).thenReturn(true);
 
         sobaService.deleteSoba(1L);
 
         verify(sobaRepository).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteSobaThrowsWhenSobaDoesNotExist() {
+        when(sobaRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class, () -> sobaService.deleteSoba(99L));
+
+        verify(sobaRepository, never()).deleteById(99L);
     }
 
     @Test
@@ -127,6 +159,13 @@ class SobaServiceTest {
     }
 
     @Test
+    void testGetSobaByIdThrowsWhenSobaDoesNotExist() {
+        when(sobaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> sobaService.getSobaById(99L));
+    }
+
+    @Test
     void testUpdateSobaUpdatesExistingRoom() {
         Soba existing = new Soba();
         TipSobe tip = new TipSobe();
@@ -141,5 +180,15 @@ class SobaServiceTest {
         assertEquals(output, sobaService.updateSoba(1L, input));
         assertEquals(tip, existing.getTipSobe());
         verify(sobaMapper).updateSobaFromDto(input, existing);
+    }
+
+    @Test
+    void testUpdateSobaThrowsWhenSobaDoesNotExist() {
+        SobaDTO dto = new SobaDTO(99L, "Soba", 100.0, "noc", true, 1L, null, "slika.jpg");
+        when(sobaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> sobaService.updateSoba(99L, dto));
+
+        verify(sobaRepository, never()).save(any(Soba.class));
     }
 }

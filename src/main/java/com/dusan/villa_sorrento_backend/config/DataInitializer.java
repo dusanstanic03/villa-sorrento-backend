@@ -44,9 +44,9 @@ public class DataInitializer implements CommandLineRunner{
     @Override
     public void run(String... args) {
         //Dodavanje korisnika
-        addOrUpdateUser("admin1", "admin1", "admin", "111", "0601111111");
-        addOrUpdateUser("admin2", "admin2", "admin", "222", "060222222");
-        addOrUpdateUser("klijent1", "klijent1", "klijent", "333", "0603333333");
+        addOrUpdateUser("admin1", "admin1", "admin", "11111", "0601111111");
+        addOrUpdateUser("admin2", "admin2", "admin", "22222", "060222222");
+        addOrUpdateUser("klijent1", "klijent1", "klijent", "33333", "0603333333");
 
         addOrUpdateTipSobe("jednokrevetna bp", "Jednokrevetna soba bez pogleda na more", 1);
         addOrUpdateTipSobe("dvokrevetna bp", "Dvokrevetna soba bez pogleda na more", 2);

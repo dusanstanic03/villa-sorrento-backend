@@ -38,7 +38,7 @@ class UserServiceTest {
         User user = new User();
         user.setUsername("pera");
         user.setPassword("tajna");
-        UserDTO dto = new UserDTO(1L, "pera", "klijent", "123", "060123");
+        UserDTO dto = new UserDTO(1L, "pera", "klijent", "12345", "060123");
 
         when(userRepository.findByUsername("pera")).thenReturn(Optional.of(user));
         when(userMapper.userToUserDTO(user)).thenReturn(dto);
@@ -62,14 +62,34 @@ class UserServiceTest {
     }
 
     @Test
+    void testLoginUserReturnsEmptyWhenUsernameDoesNotExist() {
+        when(userRepository.findByUsername("nepostojeci")).thenReturn(Optional.empty());
+
+        Optional<UserDTO> result = userService.loginUser("nepostojeci", "12345");
+
+        assertTrue(result.isEmpty());
+        verify(userMapper, never()).userToUserDTO(any(User.class));
+    }
+
+    @Test
+    void testUpdateUserThrowsWhenUserDoesNotExist() {
+        UserDTO dto = new UserDTO(99L, "novi", "klijent", "12345", "060123456");
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> userService.updateUser(99L, dto));
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
     void testRegisterUserCreatesClientRole() {
-        UserRegistracijaDTO registracijaDTO = new UserRegistracijaDTO("novi", "pass", "123", "060123");
+        UserRegistracijaDTO registracijaDTO = new UserRegistracijaDTO("novi", "pass", "12345", "060123");
         User mappedUser = new User();
         User savedUser = new User();
         savedUser.setIdUser(5L);
         savedUser.setUsername("novi");
         savedUser.setUloga("klijent");
-        UserDTO savedDto = new UserDTO(5L, "novi", "klijent", "123", "060123");
+        UserDTO savedDto = new UserDTO(5L, "novi", "klijent", "12345", "060123");
 
         when(userRepository.existsByUsername("novi")).thenReturn(false);
         when(userMapper.userRegistracijaDTOToUser(registracijaDTO)).thenReturn(mappedUser);
@@ -85,7 +105,7 @@ class UserServiceTest {
 
     @Test
     void testRegisterUserThrowsWhenUsernameExists() {
-        UserRegistracijaDTO registracijaDTO = new UserRegistracijaDTO("postoji", "pass", "123", "060123");
+        UserRegistracijaDTO registracijaDTO = new UserRegistracijaDTO("postoji", "pass", "12345", "060123");
         when(userRepository.existsByUsername("postoji")).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> userService.registerUser(registracijaDTO));
@@ -106,5 +126,14 @@ class UserServiceTest {
         userService.deleteUser(1L);
 
         verify(userRepository).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteUserThrowsWhenUserDoesNotExist() {
+        when(userRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class, () -> userService.deleteUser(99L));
+
+        verify(userRepository, never()).deleteById(99L);
     }
 }

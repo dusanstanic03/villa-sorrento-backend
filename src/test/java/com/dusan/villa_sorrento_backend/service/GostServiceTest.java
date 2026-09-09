@@ -49,28 +49,22 @@ class GostServiceTest {
 
     @Test
     void testCreateGostReturnsExistingGuestWhenDocumentExists() {
-        GostDTO dto = new GostDTO(null, "Pera", "Peric", "123", "060123");
+        GostDTO dto = new GostDTO(null, "Pera", "Peric", "12345", "060123");
         Gost existing = new Gost();
-        GostDTO existingDto = new GostDTO(5L, "Pera", "Peric", "123", "060123");
+        GostDTO existingDto = new GostDTO(5L, "Pera", "Peric", "12345", "060123");
 
-        when(gostRepository.findByBrojIsprave("123")).thenReturn(Optional.of(existing));
+        when(gostRepository.findByBrojIsprave("12345")).thenReturn(Optional.of(existing));
         when(gostMapper.gostToGostDTO(existing)).thenReturn(existingDto);
 
         assertEquals(existingDto, gostService.createGost(dto));
         verify(gostRepository, never()).save(any(Gost.class));
     }
 
-    @Test
-    void testDeleteGostThrowsWhenMissing() {
-        when(gostRepository.existsById(9L)).thenReturn(false);
-
-        assertThrows(EntityNotFoundException.class, () -> gostService.deleteGost(9L));
-    }
 
     @Test
     void testGetAllGostiReturnsDtos() {
         Gost gost = new Gost();
-        GostDTO dto = new GostDTO(1L, "Pera", "Peric", "123", "060123");
+        GostDTO dto = new GostDTO(1L, "Pera", "Peric", "12345", "060123");
         when(gostRepository.findAll()).thenReturn(List.of(gost));
         when(gostMapper.gostToGostDTO(gost)).thenReturn(dto);
 
@@ -78,10 +72,28 @@ class GostServiceTest {
     }
 
     @Test
+    void testGetGostByIdReturnsDtoWhenExists() {
+        Gost gost = new Gost();
+        GostDTO dto = new GostDTO(1L, "Pera", "Peric", "12345", "060123456");
+
+        when(gostRepository.findById(1L)).thenReturn(Optional.of(gost));
+        when(gostMapper.gostToGostDTO(gost)).thenReturn(dto);
+
+        assertEquals(dto, gostService.getGostById(1L));
+    }
+
+    @Test
+    void testGetGostByIdThrowsWhenGostDoesNotExist() {
+        when(gostRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> gostService.getGostById(99L));
+    }
+
+    @Test
     void testUpdateGostUpdatesExistingGuest() {
         Gost gost = new Gost();
-        GostDTO dto = new GostDTO(1L, "Novo", "Prezime", "123", "060123");
-        GostDTO output = new GostDTO(1L, "Novo", "Prezime", "123", "060123");
+        GostDTO dto = new GostDTO(1L, "Novo", "Prezime", "12345", "060123");
+        GostDTO output = new GostDTO(1L, "Novo", "Prezime", "12345", "060123");
         when(gostRepository.findById(1L)).thenReturn(Optional.of(gost));
         when(gostRepository.save(gost)).thenReturn(gost);
         when(gostMapper.gostToGostDTO(gost)).thenReturn(output);
@@ -91,11 +103,28 @@ class GostServiceTest {
     }
 
     @Test
+    void testUpdateGostThrowsWhenGostDoesNotExist() {
+        GostDTO dto = new GostDTO(99L, "Pera", "Peric", "12345", "060123456");
+        when(gostRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> gostService.updateGost(99L, dto));
+
+        verify(gostRepository, never()).save(any(Gost.class));
+    }
+
+    @Test
     void testDeleteGostDeletesExistingGuest() {
         when(gostRepository.existsById(1L)).thenReturn(true);
 
         gostService.deleteGost(1L);
 
         verify(gostRepository).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteGostThrowsWhenMissing() {
+        when(gostRepository.existsById(9L)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class, () -> gostService.deleteGost(9L));
     }
 }

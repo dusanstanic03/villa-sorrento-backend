@@ -67,6 +67,20 @@ class TipSobeServiceTest {
     }
 
     @Test
+    void testUpdateTipSobeUpdatesExistingType() {
+        TipSobe tipSobe = new TipSobe();
+        TipSobeDTO input = new TipSobeDTO(1L, "deluxe", "Opis", 2);
+        TipSobeDTO output = new TipSobeDTO(1L, "deluxe", "Opis", 2);
+
+        when(tipSobeRepository.findById(1L)).thenReturn(Optional.of(tipSobe));
+        when(tipSobeRepository.save(tipSobe)).thenReturn(tipSobe);
+        when(tipSobeMapper.tipSobeToTipSobeDTO(tipSobe)).thenReturn(output);
+
+        assertEquals(output, tipSobeService.updateTipSobe(1L, input));
+        verify(tipSobeMapper).updateTipSobeFromDto(input, tipSobe);
+    }
+
+    @Test
     void testUpdateTipSobeThrowsWhenMissing() {
         when(tipSobeRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -84,11 +98,27 @@ class TipSobeServiceTest {
     }
 
     @Test
+    void testGetTipSobeByIdThrowsWhenTipSobeDoesNotExist() {
+        when(tipSobeRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> tipSobeService.getTipSobeById(99L));
+    }
+
+    @Test
     void testDeleteTipSobeDeletesExistingType() {
         when(tipSobeRepository.existsById(1L)).thenReturn(true);
 
         tipSobeService.deleteTipSobe(1L);
 
         verify(tipSobeRepository).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteTipSobeThrowsWhenTipSobeDoesNotExist() {
+        when(tipSobeRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class, () -> tipSobeService.deleteTipSobe(99L));
+
+        verify(tipSobeRepository, never()).deleteById(99L);
     }
 }
