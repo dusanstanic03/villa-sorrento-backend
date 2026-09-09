@@ -62,6 +62,17 @@ class UslugaServiceTest {
     }
 
     @Test
+    void testGetAllUslugeReturnsDtos() {
+        Usluga usluga = new Usluga();
+        UslugaDTO dto = new UslugaDTO(1L, "Parking", "Opis", 8.0, true);
+
+        when(uslugaRepository.findAll()).thenReturn(List.of(usluga));
+        when(uslugaMapper.uslugaToUslugaDTO(usluga)).thenReturn(dto);
+
+        assertEquals(List.of(dto), uslugaService.getAllUsluge());
+    }
+
+    @Test
     void testGetUslugaByIdThrowsWhenMissing() {
         when(uslugaRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -91,11 +102,30 @@ class UslugaServiceTest {
     }
 
     @Test
+    void testUpdateUslugaThrowsWhenUslugaDoesNotExist() {
+        UslugaDTO dto = new UslugaDTO(99L, "Spa", "Opis", 30.0, true);
+        when(uslugaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> uslugaService.updateUsluga(99L, dto));
+
+        verify(uslugaRepository, never()).save(any(Usluga.class));
+    }
+
+    @Test
     void testDeleteUslugaDeletesExistingService() {
         when(uslugaRepository.existsById(1L)).thenReturn(true);
 
         uslugaService.deleteUsluga(1L);
 
         verify(uslugaRepository).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteUslugaThrowsWhenUslugaDoesNotExist() {
+        when(uslugaRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class, () -> uslugaService.deleteUsluga(99L));
+
+        verify(uslugaRepository, never()).deleteById(99L);
     }
 }
