@@ -155,6 +155,7 @@
                     <charset>UTF-8</charset>
                     <subpackages>com.dusan.villa_sorrento_backend.model:com.dusan.villa_sorrento_backend.service</subpackages>
                     <doclint>none</doclint>
+                    <show>private</show>
                 </configuration>
             </plugin>
         </plugins>
