@@ -37,8 +37,11 @@ import java.util.stream.Collectors;
 
 /**
  * Servis za sistemske operacije sa rezervacijama.
- * Obuhvata kreiranje rezervacije, proveru zauzetosti soba, povezivanje gostiju
- * i usluga, pretragu rezervacija, ponistavanje rezervacije i dodavanje placanja.
+ * Klasa sadrzi logiku za kreiranje rezervacije, proveru zauzetosti
+ * sobe, povezivanje stavki rezervacije sa gostima i uslugama, obracun iznosa,
+ * pregled rezervacija, ponistavanje rezervacije i dodavanje placanja.
+ *
+ * @author Dusan
  */
 @Service
 public class RezervacijaService {
@@ -69,12 +72,23 @@ public class RezervacijaService {
     }
 
     /**
-     * Kreira rezervaciju za korisnika sa jednom ili vise stavki.
-     * Metoda proverava dostupnost soba, povezuje stavke sa gostima i uslugama,
-     * racuna iznos svake stavke i ukupan iznos rezervacije.
+     * Kreira rezervaciju za korisnika sa jednom ili vise stavki rezervacije.
+     *
+     * Metoda prvo pronalazi korisnika koji kreira rezervaciju. Za svaku stavku
+     * rezervacije pronalazi sobu, proverava da li je soba slobodna u trazenom
+     * periodu, povezuje stavku sa gostima i uslugama, postavlja redni broj stavke
+     * i racuna iznos stavke. Iznos stavke se racuna kao broj nocenja pomnozen
+     * cenom sobe, uvecan za zbir cena izabranih usluga. Na kraju se racuna ukupan
+     * iznos rezervacije i rezervacija se cuva u bazi.
+     *
      * @param userId identifikator korisnika koji kreira rezervaciju
-     * @param stavkeDTO stavke rezervacije
-     * @return sacuvana rezervacija
+     * @param stavkeDTO skup stavki rezervacije koje treba kreirati
+     * @return sacuvana rezervacija predstavljena u formi DTO-a
+     * @throws EntityNotFoundException ako korisnik sa zadatim identifikatorom ne postoji
+     * @throws EntityNotFoundException ako neka od soba iz stavki ne postoji
+     * @throws EntityNotFoundException ako neki od gostiju iz stavki ne postoji
+     * @throws EntityNotFoundException ako neka od usluga iz stavki ne postoji
+     * @throws IllegalArgumentException ako je neka soba zauzeta u trazenom periodu
      */
     @Transactional //treba nam za transakcije koje imaju vise operacija
     public RezervacijaDTO createRezervacija(Long userId, Set<StavkaRezervacijeDTO> stavkeDTO) {
@@ -122,6 +136,17 @@ public class RezervacijaService {
         return rezervacijaMapper.rezervacijaToRezervacijaDTO(savedRezervacija);
     }
 
+    /**
+     * Pronalazi goste na osnovu prosledjenih identifikatora.
+     *
+     * Ako skup identifikatora nije prosledjen ili je prazan, metoda vraca prazan
+     * skup. U suprotnom, svaki identifikator se proverava u bazi i pronadjeni gosti
+     * se vracaju kao skup.
+     *
+     * @param gostIds identifikatori gostiju koji se povezuju sa stavkom rezervacije
+     * @return skup pronadjenih gostiju
+     * @throws EntityNotFoundException ako neki gost sa prosledjenim identifikatorom ne postoji
+     */
     private Set<Gost> resolveGosti(Set<Long> gostIds) {
         if (gostIds == null || gostIds.isEmpty()) {
             return new HashSet<>();
@@ -132,6 +157,16 @@ public class RezervacijaService {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Pronalazi usluge na osnovu prosledjenih identifikatora.
+     * Ako skup identifikatora nije prosledjen ili je prazan, metoda vraca prazan
+     * skup. U suprotnom, svaki identifikator se proverava u bazi i pronadjene usluge
+     * se vracaju kao skup.
+     *
+     * @param uslugaIds identifikatori usluga koje se povezuju sa stavkom rezervacije
+     * @return skup pronadjenih usluga
+     * @throws EntityNotFoundException ako neka usluga sa prosledjenim identifikatorom ne postoji
+     */
     private Set<Usluga> resolveUsluge(Set<Long> uslugaIds) {
         if (uslugaIds == null || uslugaIds.isEmpty()) {
             return new HashSet<>();
@@ -141,11 +176,13 @@ public class RezervacijaService {
                 .orElseThrow(() -> new EntityNotFoundException("Usluga sa ID " + id + " nije pronađena.")))
                 .collect(Collectors.toSet());
     }
-    
+
     /**
-     * Vraca sve rezervacije u sistemu.
+     * Vraca sve rezervacije iz sistema.
+     * Metoda ucitava sve rezervacije iz baze, mapira ih u DTO objekte i vraca listu.
+     * Koristi se za pregled rezervacija od strane admina.
      *
-     * @return lista rezervacija
+     * @return lista svih rezervacija predstavljenih u formi DTO objekata
      */
     public List<RezervacijaDTO> getAllRezervacije() {
         return rezervacijaRepository.findAll().stream()
@@ -155,9 +192,12 @@ public class RezervacijaService {
 
     /**
      * Pronalazi rezervaciju po identifikatoru.
+     * Metoda pretrazuje bazu po identifikatoru rezervacije. Ako rezervacija postoji,
+     * vraca se njen DTO prikaz. Ako ne postoji, baca se izuzetak.
      *
-     * @param id identifikator rezervacije
-     * @return pronadjena rezervacija
+     * @param id identifikator rezervacije koja se pretrazuje
+     * @return pronadjena rezervacija predstavljena kao DTO
+     * @throws EntityNotFoundException ako rezervacija sa zadatim identifikatorom ne postoji
      */
     public RezervacijaDTO getRezervacijaById(Long id) {
         return rezervacijaRepository.findById(id)
@@ -167,9 +207,12 @@ public class RezervacijaService {
 
     /**
      * Vraca rezervacije koje pripadaju odredjenom korisniku.
+     * Metoda pronalazi sve rezervacije od korisnika sa prosledjenim
+     * identifikatorom i mapira ih u DTO objekte. Koristi se za prikaz rezervacija
+     * prijavljenog klijenta.
      *
-     * @param userId identifikator korisnika
-     * @return lista korisnikovih rezervacija
+     * @param userId identifikator korisnika cije se rezervacije pretrazuju
+     * @return lista rezervacija korisnika u formi DTO objekata
      */
     public List<RezervacijaDTO> getRezervacijeByUserId(Long userId) {
         return rezervacijaRepository.findByUserIdUser(userId).stream()
@@ -178,9 +221,13 @@ public class RezervacijaService {
     }
 
     /**
-     * Ponistava rezervaciju i brise povezane stavke i placanja.
+     * Ponistava rezervaciju.
+     * Metoda pronalazi rezervaciju po identifikatoru i brise je iz baze. Zbog
+     * kaskadnog brisanja na domenskoj klasi, zajedno sa rezervacijom brisu se i
+     * povezane stavke rezervacije i placanja.
      *
-     * @param rezervacijaId identifikator rezervacije
+     * @param rezervacijaId identifikator rezervacije koja se ponistava
+     * @throws EntityNotFoundException ako rezervacija sa zadatim identifikatorom ne postoji
      */
     @Transactional
     public void cancelRezervacija(Long rezervacijaId) {
@@ -189,14 +236,18 @@ public class RezervacijaService {
         //brišemo rezervaciju, što će automatski obrisati i stavke i plaćanja zbog cascade
         rezervacijaRepository.delete(rezervacija);
     }
-    
-    
+
+
     /**
      * Dodaje placanje na postojecu rezervaciju.
+     * Metoda delegira kreiranje placanja servisu za placanja. Rezervacija se
+     * identifikuje preko prosledjenog identifikatora, a podaci o placanju se
+     * prosledjuju kroz DTO objekat.
      *
-     * @param rezervacijaId identifikator rezervacije
-     * @param paymentDto podaci o placanju
-     * @return sacuvano placanje
+     * @param rezervacijaId identifikator rezervacije za koju se evidentira placanje
+     * @param paymentDto podaci o placanju koje treba evidentirati
+     * @return sacuvano placanje predstavljeno kao DTO
+     * @throws EntityNotFoundException ako rezervacija sa zadatim identifikatorom ne postoji
      */
     @Transactional
     public PlacanjeDTO addPaymentToRezervacija(Long rezervacijaId, PlacanjeDTO paymentDto) {
