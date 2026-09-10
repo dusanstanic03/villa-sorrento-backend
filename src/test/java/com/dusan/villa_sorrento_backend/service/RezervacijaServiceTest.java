@@ -76,7 +76,7 @@ class RezervacijaServiceTest {
         Soba soba = new Soba();
         soba.setIdSoba(1L);
         soba.setCena(100.0);
-        soba.setOpis("Soba");
+        soba.setOpis("Deluxe soba");
         Gost gost = new Gost();
         gost.setIdGost(2L);
         Usluga usluga = new Usluga();
@@ -118,7 +118,7 @@ class RezervacijaServiceTest {
         User user = new User();
         Soba soba = new Soba();
         soba.setIdSoba(1L);
-        soba.setOpis("Soba");
+        soba.setOpis("Deluxe soba");
         StavkaRezervacijeDTO stavkaDTO = new StavkaRezervacijeDTO(null, 0,
                 LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 4), null, 1L,
                 Set.of(), Set.of(), null, null);
@@ -167,7 +167,7 @@ class RezervacijaServiceTest {
         Soba soba = new Soba();
         soba.setIdSoba(1L);
         soba.setCena(100.0);
-        soba.setOpis("Soba");
+        soba.setOpis("Deluxe soba");
 
         StavkaRezervacijeDTO stavkaDTO = new StavkaRezervacijeDTO(
                 null,
@@ -203,7 +203,7 @@ class RezervacijaServiceTest {
         Soba soba = new Soba();
         soba.setIdSoba(1L);
         soba.setCena(100.0);
-        soba.setOpis("Soba");
+        soba.setOpis("Deluxe soba");
 
         StavkaRezervacijeDTO stavkaDTO = new StavkaRezervacijeDTO(
                 null,
