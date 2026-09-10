@@ -11,15 +11,23 @@ import jakarta.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class RezervacijaTest {
 
     private final Validator validator;
+    private Rezervacija rezervacija;
 
     RezervacijaTest() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    @BeforeEach
+    void setUp() {
+        rezervacija = validRezervacija();
     }
 
     private Rezervacija validRezervacija() {
@@ -45,28 +53,32 @@ class RezervacijaTest {
         return user;
     }
 
-    private void assertInvalid(Rezervacija rezervacija) {
+    private void assertValidationViolations(String propertyName, String... expectedMessages) {
         Set<ConstraintViolation<Rezervacija>> violations = validator.validate(rezervacija);
-        assertFalse(violations.isEmpty());
+        assertEquals(expectedMessages.length, violations.size());
+        assertTrue(violations.stream()
+                .allMatch(violation -> propertyName.equals(violation.getPropertyPath().toString())));
+
+        Set<String> actualMessages = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(expectedMessages), actualMessages);
     }
 
     @Test
     void testSetIdRezervacija() {
-        Rezervacija rezervacija = validRezervacija();
         rezervacija.setIdRezervacija(2L);
         assertEquals(2L, rezervacija.getIdRezervacija());
     }
 
     @Test
     void testSetIznos() {
-        Rezervacija rezervacija = validRezervacija();
         rezervacija.setIznos(250.0);
         assertEquals(250.0, rezervacija.getIznos());
     }
 
     @Test
     void testSetDatumKreiranja() {
-        Rezervacija rezervacija = validRezervacija();
         LocalDate datum = LocalDate.of(2026, 8, 1);
         rezervacija.setDatumKreiranja(datum);
         assertEquals(datum, rezervacija.getDatumKreiranja());
@@ -74,7 +86,6 @@ class RezervacijaTest {
 
     @Test
     void testSetUser() {
-        Rezervacija rezervacija = validRezervacija();
         User user = validUser();
         user.setIdUser(2L);
         rezervacija.setUser(user);
@@ -83,7 +94,6 @@ class RezervacijaTest {
 
     @Test
     void testSetPlacanja() {
-        Rezervacija rezervacija = validRezervacija();
         Set<Placanje> placanja = new HashSet<>();
         placanja.add(new Placanje());
         rezervacija.setPlacanja(placanja);
@@ -92,7 +102,6 @@ class RezervacijaTest {
 
     @Test
     void testSetStavkeRezervacije() {
-        Rezervacija rezervacija = validRezervacija();
         Set<StavkaRezervacije> stavke = new HashSet<>();
         stavke.add(new StavkaRezervacije());
         rezervacija.setStavkeRezervacije(stavke);
@@ -101,30 +110,26 @@ class RezervacijaTest {
 
     @Test
     void testValidationPassesForValidRezervacija() {
-        Rezervacija rezervacija = validRezervacija();
         Set<ConstraintViolation<Rezervacija>> violations = validator.validate(rezervacija);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void testValidationFailsWhenIznosIsNegative() {
-        Rezervacija rezervacija = validRezervacija();
         rezervacija.setIznos(-1.0);
-        assertInvalid(rezervacija);
+        assertValidationViolations("iznos", "Iznos rezervacije ne sme biti negativan.");
     }
 
     @Test
     void testValidationFailsWhenDatumKreiranjaIsNull() {
-        Rezervacija rezervacija = validRezervacija();
         rezervacija.setDatumKreiranja(null);
-        assertInvalid(rezervacija);
+        assertValidationViolations("datumKreiranja", "Datum kreiranja rezervacije je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenUserIsNull() {
-        Rezervacija rezervacija = validRezervacija();
         rezervacija.setUser(null);
-        assertInvalid(rezervacija);
+        assertValidationViolations("user", "Klijent je obavezan.");
     }
 
     @Test
@@ -137,7 +142,6 @@ class RezervacijaTest {
 
     @Test
     void testToStringContainsBasicFieldsAndExcludesRelations() {
-        Rezervacija rezervacija = validRezervacija();
         rezervacija.getPlacanja().add(new Placanje());
         rezervacija.getStavkeRezervacije().add(new StavkaRezervacije());
         String result = rezervacija.toString();

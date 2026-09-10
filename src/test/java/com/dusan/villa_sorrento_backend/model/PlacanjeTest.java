@@ -11,15 +11,23 @@ import jakarta.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PlacanjeTest {
 
     private final Validator validator;
+    private Placanje placanje;
 
     PlacanjeTest() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    @BeforeEach
+    void setUp() {
+        placanje = validPlacanje();
     }
 
     private Placanje validPlacanje() {
@@ -56,42 +64,44 @@ class PlacanjeTest {
         return user;
     }
 
-    private void assertInvalid(Placanje placanje) {
+    private void assertValidationViolations(String propertyName, String... expectedMessages) {
         Set<ConstraintViolation<Placanje>> violations = validator.validate(placanje);
-        assertFalse(violations.isEmpty());
+        assertEquals(expectedMessages.length, violations.size());
+        assertTrue(violations.stream()
+                .allMatch(violation -> propertyName.equals(violation.getPropertyPath().toString())));
+
+        Set<String> actualMessages = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(expectedMessages), actualMessages);
     }
 
     @Test
     void testSetIdPlacanje() {
-        Placanje placanje = validPlacanje();
         placanje.setIdPlacanje(2L);
         assertEquals(2L, placanje.getIdPlacanje());
     }
 
     @Test
     void testSetStatus() {
-        Placanje placanje = validPlacanje();
         placanje.setStatus("PENDING");
         assertEquals("PENDING", placanje.getStatus());
     }
 
     @Test
     void testSetNacinPlacanja() {
-        Placanje placanje = validPlacanje();
         placanje.setNacinPlacanja("CASH");
         assertEquals("CASH", placanje.getNacinPlacanja());
     }
 
     @Test
     void testSetIznos() {
-        Placanje placanje = validPlacanje();
         placanje.setIznos(250.0);
         assertEquals(250.0, placanje.getIznos());
     }
 
     @Test
     void testSetDatumPlacanja() {
-        Placanje placanje = validPlacanje();
         LocalDate datum = LocalDate.of(2026, 8, 1);
         placanje.setDatumPlacanja(datum);
         assertEquals(datum, placanje.getDatumPlacanja());
@@ -99,7 +109,6 @@ class PlacanjeTest {
 
     @Test
     void testSetRezervacija() {
-        Placanje placanje = validPlacanje();
         Rezervacija rezervacija = validRezervacija();
         rezervacija.setIdRezervacija(2L);
         placanje.setRezervacija(rezervacija);
@@ -108,72 +117,66 @@ class PlacanjeTest {
 
     @Test
     void testValidationPassesForValidPlacanje() {
-        Placanje placanje = validPlacanje();
         Set<ConstraintViolation<Placanje>> violations = validator.validate(placanje);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void testValidationFailsWhenStatusIsBlank() {
-        Placanje placanje = validPlacanje();
-        placanje.setStatus("");
-        assertInvalid(placanje);
+        placanje.setStatus("   ");
+        assertValidationViolations("status",
+                "Status placanja je obavezan.",
+                "Status placanja nije dozvoljen.");
     }
 
     @Test
     void testValidationFailsWhenStatusIsInvalid() {
-        Placanje placanje = validPlacanje();
         placanje.setStatus("INVALID");
-        assertInvalid(placanje);
+        assertValidationViolations("status", "Status placanja nije dozvoljen.");
     }
 
     @Test
     void testValidationFailsWhenNacinPlacanjaIsBlank() {
-        Placanje placanje = validPlacanje();
-        placanje.setNacinPlacanja("");
-        assertInvalid(placanje);
+        placanje.setNacinPlacanja("   ");
+        assertValidationViolations("nacinPlacanja",
+                "Nacin placanja je obavezan.",
+                "Nacin placanja mora biti CARD, CRYPTO ili CASH.");
     }
 
     @Test
     void testValidationFailsWhenNacinPlacanjaIsInvalid() {
-        Placanje placanje = validPlacanje();
         placanje.setNacinPlacanja("TRANSFER");
-        assertInvalid(placanje);
+        assertValidationViolations("nacinPlacanja", "Nacin placanja mora biti CARD, CRYPTO ili CASH.");
     }
 
     @Test
     void testValidationFailsWhenIznosIsNull() {
-        Placanje placanje = validPlacanje();
         placanje.setIznos(null);
-        assertInvalid(placanje);
+        assertValidationViolations("iznos", "Iznos placanja je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenIznosIsZero() {
-        Placanje placanje = validPlacanje();
         placanje.setIznos(0.0);
-        assertInvalid(placanje);
+        assertValidationViolations("iznos", "Iznos placanja mora biti pozitivan.");
     }
 
     @Test
     void testValidationFailsWhenIznosIsNegative() {
-        Placanje placanje = validPlacanje();
         placanje.setIznos(-1.0);
-        assertInvalid(placanje);
+        assertValidationViolations("iznos", "Iznos placanja mora biti pozitivan.");
     }
 
     @Test
     void testValidationFailsWhenDatumPlacanjaIsNull() {
-        Placanje placanje = validPlacanje();
         placanje.setDatumPlacanja(null);
-        assertInvalid(placanje);
+        assertValidationViolations("datumPlacanja", "Datum placanja je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenRezervacijaIsNull() {
-        Placanje placanje = validPlacanje();
         placanje.setRezervacija(null);
-        assertInvalid(placanje);
+        assertValidationViolations("rezervacija", "Rezervacija je obavezna.");
     }
 
     @Test
@@ -186,7 +189,6 @@ class PlacanjeTest {
 
     @Test
     void testToStringContainsBasicFieldsAndExcludesRelations() {
-        Placanje placanje = validPlacanje();
         String result = placanje.toString();
         assertTrue(result.contains("idPlacanje=1"));
         assertTrue(result.contains("status=COMPLETED"));

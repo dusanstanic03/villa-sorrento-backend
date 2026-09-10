@@ -10,15 +10,23 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class TipSobeTest {
 
     private final Validator validator;
+    private TipSobe tipSobe;
 
     TipSobeTest() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    @BeforeEach
+    void setUp() {
+        tipSobe = validTipSobe();
     }
 
     private TipSobe validTipSobe() {
@@ -31,42 +39,44 @@ class TipSobeTest {
         return tipSobe;
     }
 
-    private void assertInvalid(TipSobe tipSobe) {
+    private void assertValidationViolations(String propertyName, String... expectedMessages) {
         Set<ConstraintViolation<TipSobe>> violations = validator.validate(tipSobe);
-        assertFalse(violations.isEmpty());
+        assertEquals(expectedMessages.length, violations.size());
+        assertTrue(violations.stream()
+                .allMatch(violation -> propertyName.equals(violation.getPropertyPath().toString())));
+
+        Set<String> actualMessages = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(expectedMessages), actualMessages);
     }
 
     @Test
     void testSetIdTipSobe() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setIdTipSobe(2L);
         assertEquals(2L, tipSobe.getIdTipSobe());
     }
 
     @Test
     void testSetNaziv() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setNaziv("apartman");
         assertEquals("apartman", tipSobe.getNaziv());
     }
 
     @Test
     void testSetOpis() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setOpis("Apartman sa pogledom");
         assertEquals("Apartman sa pogledom", tipSobe.getOpis());
     }
 
     @Test
     void testSetKapacitet() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setKapacitet(4);
         assertEquals(4, tipSobe.getKapacitet());
     }
 
     @Test
     void testSetSobe() {
-        TipSobe tipSobe = validTipSobe();
         Set<Soba> sobe = new HashSet<>();
         sobe.add(new Soba());
         tipSobe.setSobe(sobe);
@@ -75,65 +85,56 @@ class TipSobeTest {
 
     @Test
     void testValidationPassesForValidTipSobe() {
-        TipSobe tipSobe = validTipSobe();
         Set<ConstraintViolation<TipSobe>> violations = validator.validate(tipSobe);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void testValidationFailsWhenNazivIsBlank() {
-        TipSobe tipSobe = validTipSobe();
-        tipSobe.setNaziv("");
-        assertInvalid(tipSobe);
+        tipSobe.setNaziv("   ");
+        assertValidationViolations("naziv", "Naziv tipa sobe je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenNazivIsTooShort() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setNaziv("ab");
-        assertInvalid(tipSobe);
+        assertValidationViolations("naziv", "Naziv tipa sobe mora imati izmedju 3 i 50 slova.");
     }
 
     @Test
     void testValidationFailsWhenNazivIsTooLong() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setNaziv("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-        assertInvalid(tipSobe);
+        assertValidationViolations("naziv", "Naziv tipa sobe mora imati izmedju 3 i 50 slova.");
     }
 
     @Test
     void testValidationFailsWhenOpisIsBlank() {
-        TipSobe tipSobe = validTipSobe();
-        tipSobe.setOpis("");
-        assertInvalid(tipSobe);
+        tipSobe.setOpis(" ");
+        assertValidationViolations("opis", "Opis tipa sobe je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenOpisIsTooLong() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setOpis("a".repeat(501));
-        assertInvalid(tipSobe);
+        assertValidationViolations("opis", "Opis tipa sobe ne sme imati vise od 500 karaktera.");
     }
 
     @Test
     void testValidationFailsWhenKapacitetIsNull() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setKapacitet(null);
-        assertInvalid(tipSobe);
+        assertValidationViolations("kapacitet", "Kapacitet je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenKapacitetIsLessThanOne() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setKapacitet(0);
-        assertInvalid(tipSobe);
+        assertValidationViolations("kapacitet", "Kapacitet mora biti najmanje 1.");
     }
 
     @Test
     void testValidationFailsWhenKapacitetIsGreaterThanFour() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.setKapacitet(5);
-        assertInvalid(tipSobe);
+        assertValidationViolations("kapacitet", "Kapacitet ne sme biti veci od 4.");
     }
 
     @Test
@@ -146,7 +147,6 @@ class TipSobeTest {
 
     @Test
     void testToStringContainsBasicFieldsAndExcludesRelations() {
-        TipSobe tipSobe = validTipSobe();
         tipSobe.getSobe().add(new Soba());
         String result = tipSobe.toString();
         assertTrue(result.contains("idTipSobe=1"));

@@ -2,11 +2,13 @@ package com.dusan.villa_sorrento_backend.model;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,10 +16,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserTest {
 
     private final Validator validator;
+    private User user;
 
     UserTest() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    @BeforeEach
+    void setUp() {
+        user = validUser();
     }
 
     private User validUser() {
@@ -32,56 +40,56 @@ class UserTest {
         return user;
     }
 
-    private void assertInvalid(User user) {
+    private void assertValidationViolations(String propertyName, String... expectedMessages) {
         Set<ConstraintViolation<User>> violations = validator.validate(user);
-        assertFalse(violations.isEmpty());
+        assertEquals(expectedMessages.length, violations.size());
+        assertTrue(violations.stream()
+                .allMatch(violation -> propertyName.equals(violation.getPropertyPath().toString())));
+
+        Set<String> actualMessages = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(expectedMessages), actualMessages);
     }
 
     @Test
     void testSetIdUser() {
-        User user = validUser();
         user.setIdUser(2L);
         assertEquals(2L, user.getIdUser());
     }
 
     @Test
     void testSetUsername() {
-        User user = validUser();
         user.setUsername("marko");
         assertEquals("marko", user.getUsername());
     }
 
     @Test
     void testSetPassword() {
-        User user = validUser();
         user.setPassword("abcd");
         assertEquals("abcd", user.getPassword());
     }
 
     @Test
     void testSetUloga() {
-        User user = validUser();
         user.setUloga("admin");
         assertEquals("admin", user.getUloga());
     }
 
     @Test
     void testSetBrojIsprave() {
-        User user = validUser();
         user.setBrojIsprave("98765");
         assertEquals("98765", user.getBrojIsprave());
     }
 
     @Test
     void testSetBrojTelefona() {
-        User user = validUser();
         user.setBrojTelefona("061222333");
         assertEquals("061222333", user.getBrojTelefona());
     }
 
     @Test
     void testSetRezervacije() {
-        User user = validUser();
         Set<Rezervacija> rezervacije = new HashSet<>();
         rezervacije.add(new Rezervacija());
         user.setRezervacije(rezervacije);
@@ -90,113 +98,104 @@ class UserTest {
 
     @Test
     void testValidationPassesForValidUser() {
-        Set<ConstraintViolation<User>> violations = validator.validate(validUser());
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void testValidationFailsWhenUsernameIsBlank() {
-        User user = validUser();
-        user.setUsername("");
-        assertInvalid(user);
+        user.setUsername("   ");
+        assertValidationViolations("username", "Korisnicko ime je obavezno.");
     }
 
     @Test
     void testValidationFailsWhenUsernameIsTooShort() {
-        User user = validUser();
         user.setUsername("ab");
-        assertInvalid(user);
+        assertValidationViolations("username", "Korisnicko ime mora imati izmedju 3 i 15 karaktera.");
     }
 
     @Test
     void testValidationFailsWhenUsernameIsTooLong() {
-        User user = validUser();
         user.setUsername("abcdefghijklmnop");
-        assertInvalid(user);
+        assertValidationViolations("username", "Korisnicko ime mora imati izmedju 3 i 15 karaktera.");
     }
 
     @Test
     void testValidationFailsWhenPasswordIsBlank() {
-        User user = validUser();
-        user.setPassword("");
-        assertInvalid(user);
+        user.setPassword("    ");
+        assertValidationViolations("password", "Lozinka je obavezna.");
     }
 
     @Test
     void testValidationFailsWhenPasswordIsTooShort() {
-        User user = validUser();
         user.setPassword("123");
-        assertInvalid(user);
+        assertValidationViolations("password", "Lozinka mora imati najmanje 4 karaktera.");
     }
 
     @Test
     void testValidationFailsWhenUlogaIsBlank() {
-        User user = validUser();
-        user.setUloga("");
-        assertInvalid(user);
+        user.setUloga("     ");
+        assertValidationViolations("uloga",
+                "Uloga je obavezna.",
+                "Uloga mora biti admin ili klijent.");
     }
 
     @Test
     void testValidationFailsWhenUlogaIsInvalid() {
-        User user = validUser();
         user.setUloga("menadzer");
-        assertInvalid(user);
+        assertValidationViolations("uloga", "Uloga mora biti admin ili klijent.");
     }
 
     @Test
     void testValidationFailsWhenBrojIspraveIsBlank() {
-        User user = validUser();
-        user.setBrojIsprave("");
-        assertInvalid(user);
+        user.setBrojIsprave("     ");
+        assertValidationViolations("brojIsprave",
+                "Broj isprave je obavezan.",
+                "Broj isprave sme sadrzati samo cifre.");
     }
 
     @Test
     void testValidationFailsWhenBrojIspraveIsTooShort() {
-        User user = validUser();
         user.setBrojIsprave("1234");
-        assertInvalid(user);
+        assertValidationViolations("brojIsprave", "Broj isprave mora imati izmedju 5 i 20 cifara");
     }
 
     @Test
     void testValidationFailsWhenBrojIspraveIsTooLong() {
-        User user = validUser();
         user.setBrojIsprave("123456789012345678901");
-        assertInvalid(user);
+        assertValidationViolations("brojIsprave", "Broj isprave mora imati izmedju 5 i 20 cifara");
     }
 
     @Test
     void testValidationFailsWhenBrojIspraveContainsLetters() {
-        User user = validUser();
-        user.setBrojIsprave("ABC123");
-        assertInvalid(user);
+        user.setBrojIsprave("ABC12");
+        assertValidationViolations("brojIsprave", "Broj isprave sme sadrzati samo cifre.");
     }
 
     @Test
     void testValidationFailsWhenBrojTelefonaIsBlank() {
-        User user = validUser();
-        user.setBrojTelefona("");
-        assertInvalid(user);
+        user.setBrojTelefona("     ");
+        assertValidationViolations("brojTelefona",
+                "Broj telefona je obavezan.",
+                "Broj telefona sme sadrzati samo cifre.");
     }
 
     @Test
     void testValidationFailsWhenBrojTelefonaIsTooShort() {
-        User user = validUser();
         user.setBrojTelefona("1234");
-        assertInvalid(user);
+        assertValidationViolations("brojTelefona", "Broj telefona mora imati izmedju 5 i 20 cifara");
     }
 
     @Test
     void testValidationFailsWhenBrojTelefonaIsTooLong() {
-        User user = validUser();
         user.setBrojTelefona("123456789012345678901");
-        assertInvalid(user);
+        assertValidationViolations("brojTelefona", "Broj telefona mora imati izmedju 5 i 20 cifara");
     }
 
     @Test
     void testValidationFailsWhenBrojTelefonaContainsLetters() {
-        User user = validUser();
         user.setBrojTelefona("060ABC");
-        assertInvalid(user);
+        assertValidationViolations("brojTelefona", "Broj telefona sme sadrzati samo cifre.");
     }
 
     @Test
@@ -209,7 +208,6 @@ class UserTest {
 
     @Test
     void testToStringContainsBasicFieldsAndExcludesRelations() {
-        User user = validUser();
         user.getRezervacije().add(new Rezervacija());
         String result = user.toString();
         assertTrue(result.contains("idUser=1"));

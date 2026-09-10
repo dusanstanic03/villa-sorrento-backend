@@ -38,7 +38,7 @@ class UserServiceTest {
         User user = new User();
         user.setUsername("pera");
         user.setPassword("tajna");
-        UserDTO dto = new UserDTO(1L, "pera", "klijent", "12345", "060123");
+        UserDTO dto = new UserDTO(1L, "pera", "klijent", "12345", "060123456");
 
         when(userRepository.findByUsername("pera")).thenReturn(Optional.of(user));
         when(userMapper.userToUserDTO(user)).thenReturn(dto);
@@ -83,13 +83,13 @@ class UserServiceTest {
 
     @Test
     void testRegisterUserCreatesClientRole() {
-        UserRegistracijaDTO registracijaDTO = new UserRegistracijaDTO("novi", "pass", "12345", "060123");
+        UserRegistracijaDTO registracijaDTO = new UserRegistracijaDTO("novi", "pass", "12345", "060123456");
         User mappedUser = new User();
         User savedUser = new User();
         savedUser.setIdUser(5L);
         savedUser.setUsername("novi");
         savedUser.setUloga("klijent");
-        UserDTO savedDto = new UserDTO(5L, "novi", "klijent", "12345", "060123");
+        UserDTO savedDto = new UserDTO(5L, "novi", "klijent", "12345", "060123456");
 
         when(userRepository.existsByUsername("novi")).thenReturn(false);
         when(userMapper.userRegistracijaDTOToUser(registracijaDTO)).thenReturn(mappedUser);
@@ -105,7 +105,7 @@ class UserServiceTest {
 
     @Test
     void testRegisterUserThrowsWhenUsernameExists() {
-        UserRegistracijaDTO registracijaDTO = new UserRegistracijaDTO("postoji", "pass", "12345", "060123");
+        UserRegistracijaDTO registracijaDTO = new UserRegistracijaDTO("postoji", "pass", "12345", "060123456");
         when(userRepository.existsByUsername("postoji")).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> userService.registerUser(registracijaDTO));

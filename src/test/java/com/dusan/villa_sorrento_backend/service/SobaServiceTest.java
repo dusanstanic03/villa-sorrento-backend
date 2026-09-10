@@ -42,11 +42,11 @@ class SobaServiceTest {
 
     @Test
     void testCreateSobaUsesSelectedRoomType() {
-        SobaDTO input = new SobaDTO(null, "Soba", 100.0, "noc", null, 1L, null, "slika.jpg");
+        SobaDTO input = new SobaDTO(null, "Deluxe soba", 100.0, "noc", null, 1L, null, "slika.jpg");
         Soba entity = new Soba();
         Soba saved = new Soba();
         TipSobe tip = new TipSobe();
-        SobaDTO output = new SobaDTO(10L, "Soba", 100.0, "noc", true, 1L, "dvokrevetna", "slika.jpg");
+        SobaDTO output = new SobaDTO(10L, "Deluxe soba", 100.0, "noc", true, 1L, "dvokrevetna", "slika.jpg");
 
         when(sobaMapper.sobaDTOToSoba(input)).thenReturn(entity);
         when(tipSobeRepository.findById(1L)).thenReturn(Optional.of(tip));
@@ -62,7 +62,7 @@ class SobaServiceTest {
 
     @Test
     void testCreateSobaThrowsWhenRoomTypeIdDoesNotExist() {
-        SobaDTO input = new SobaDTO(null, "Soba", 100.0, "noc", null, 99L, null, "slika.jpg");
+        SobaDTO input = new SobaDTO(null, "Deluxe soba", 100.0, "noc", null, 99L, null, "slika.jpg");
         when(sobaMapper.sobaDTOToSoba(input)).thenReturn(new Soba());
         when(tipSobeRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -71,7 +71,7 @@ class SobaServiceTest {
 
     @Test
     void testCreateSobaThrowsWhenRoomTypeNameDoesNotExist() {
-        SobaDTO input = new SobaDTO(null, "Soba", 100.0, "noc", null, null, "nepoznat", "slika.jpg");
+        SobaDTO input = new SobaDTO(null, "Deluxe soba", 100.0, "noc", null, null, "nepoznat", "slika.jpg");
 
         when(sobaMapper.sobaDTOToSoba(input)).thenReturn(new Soba());
         when(tipSobeRepository.findByNaziv("nepoznat")).thenReturn(Optional.empty());
@@ -83,7 +83,7 @@ class SobaServiceTest {
 
     @Test
     void testCreateSobaThrowsWhenRoomTypeIsNotProvided() {
-        SobaDTO input = new SobaDTO(null, "Soba", 100.0, "noc", null, null, null, "slika.jpg");
+        SobaDTO input = new SobaDTO(null, "Deluxe soba", 100.0, "noc", null, null, null, "slika.jpg");
 
         when(sobaMapper.sobaDTOToSoba(input)).thenReturn(new Soba());
 
@@ -141,7 +141,7 @@ class SobaServiceTest {
     @Test
     void testGetAllSobeReturnsDtos() {
         Soba soba = new Soba();
-        SobaDTO dto = new SobaDTO(1L, "Soba", 100.0, "noc", true, 1L, "deluxe", "s.jpg");
+        SobaDTO dto = new SobaDTO(1L, "Deluxe soba", 100.0, "noc", true, 1L, "deluxe", "s.jpg");
         when(sobaRepository.findAll()).thenReturn(List.of(soba));
         when(sobaMapper.sobaToSobaDTO(soba)).thenReturn(dto);
 
@@ -151,7 +151,7 @@ class SobaServiceTest {
     @Test
     void testGetSobaByIdReturnsDtoWhenExists() {
         Soba soba = new Soba();
-        SobaDTO dto = new SobaDTO(1L, "Soba", 100.0, "noc", true, 1L, "deluxe", "s.jpg");
+        SobaDTO dto = new SobaDTO(1L, "Deluxe soba", 100.0, "noc", true, 1L, "deluxe", "s.jpg");
         when(sobaRepository.findById(1L)).thenReturn(Optional.of(soba));
         when(sobaMapper.sobaToSobaDTO(soba)).thenReturn(dto);
 
@@ -169,8 +169,8 @@ class SobaServiceTest {
     void testUpdateSobaUpdatesExistingRoom() {
         Soba existing = new Soba();
         TipSobe tip = new TipSobe();
-        SobaDTO input = new SobaDTO(1L, "Soba", 120.0, "noc", true, 2L, null, "s.jpg");
-        SobaDTO output = new SobaDTO(1L, "Soba", 120.0, "noc", true, 2L, "deluxe", "s.jpg");
+        SobaDTO input = new SobaDTO(1L, "Deluxe soba", 120.0, "noc", true, 2L, null, "s.jpg");
+        SobaDTO output = new SobaDTO(1L, "Deluxe soba", 120.0, "noc", true, 2L, "deluxe", "s.jpg");
 
         when(sobaRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(tipSobeRepository.findById(2L)).thenReturn(Optional.of(tip));
@@ -184,7 +184,7 @@ class SobaServiceTest {
 
     @Test
     void testUpdateSobaThrowsWhenSobaDoesNotExist() {
-        SobaDTO dto = new SobaDTO(99L, "Soba", 100.0, "noc", true, 1L, null, "slika.jpg");
+        SobaDTO dto = new SobaDTO(99L, "Deluxe soba", 100.0, "noc", true, 1L, null, "slika.jpg");
         when(sobaRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> sobaService.updateSoba(99L, dto));

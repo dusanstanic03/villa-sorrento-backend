@@ -34,12 +34,12 @@ class GostServiceTest {
 
     @Test
     void testCreateGostSavesNewGuestWhenDocumentDoesNotExist() {
-        GostDTO dto = new GostDTO(null, "Pera", "Peric", "123", "060123");
+        GostDTO dto = new GostDTO(null, "Pera", "Peric", "12345", "060123456");
         Gost entity = new Gost();
         Gost saved = new Gost();
-        GostDTO savedDto = new GostDTO(1L, "Pera", "Peric", "123", "060123");
+        GostDTO savedDto = new GostDTO(1L, "Pera", "Peric", "12345", "060123456");
 
-        when(gostRepository.findByBrojIsprave("123")).thenReturn(Optional.empty());
+        when(gostRepository.findByBrojIsprave("12345")).thenReturn(Optional.empty());
         when(gostMapper.gostDTOToGost(dto)).thenReturn(entity);
         when(gostRepository.save(entity)).thenReturn(saved);
         when(gostMapper.gostToGostDTO(saved)).thenReturn(savedDto);
@@ -49,9 +49,9 @@ class GostServiceTest {
 
     @Test
     void testCreateGostReturnsExistingGuestWhenDocumentExists() {
-        GostDTO dto = new GostDTO(null, "Pera", "Peric", "12345", "060123");
+        GostDTO dto = new GostDTO(null, "Pera", "Peric", "12345", "060123456");
         Gost existing = new Gost();
-        GostDTO existingDto = new GostDTO(5L, "Pera", "Peric", "12345", "060123");
+        GostDTO existingDto = new GostDTO(5L, "Pera", "Peric", "12345", "060123456");
 
         when(gostRepository.findByBrojIsprave("12345")).thenReturn(Optional.of(existing));
         when(gostMapper.gostToGostDTO(existing)).thenReturn(existingDto);
@@ -64,7 +64,7 @@ class GostServiceTest {
     @Test
     void testGetAllGostiReturnsDtos() {
         Gost gost = new Gost();
-        GostDTO dto = new GostDTO(1L, "Pera", "Peric", "12345", "060123");
+        GostDTO dto = new GostDTO(1L, "Pera", "Peric", "12345", "060123456");
         when(gostRepository.findAll()).thenReturn(List.of(gost));
         when(gostMapper.gostToGostDTO(gost)).thenReturn(dto);
 
@@ -92,8 +92,8 @@ class GostServiceTest {
     @Test
     void testUpdateGostUpdatesExistingGuest() {
         Gost gost = new Gost();
-        GostDTO dto = new GostDTO(1L, "Novo", "Prezime", "12345", "060123");
-        GostDTO output = new GostDTO(1L, "Novo", "Prezime", "12345", "060123");
+        GostDTO dto = new GostDTO(1L, "Novo", "Prezime", "12345", "060123456");
+        GostDTO output = new GostDTO(1L, "Novo", "Prezime", "12345", "060123456");
         when(gostRepository.findById(1L)).thenReturn(Optional.of(gost));
         when(gostRepository.save(gost)).thenReturn(gost);
         when(gostMapper.gostToGostDTO(gost)).thenReturn(output);
