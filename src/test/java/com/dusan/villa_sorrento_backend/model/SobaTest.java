@@ -10,15 +10,23 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class SobaTest {
 
     private final Validator validator;
+    private Soba soba;
 
     SobaTest() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    @BeforeEach
+    void setUp() {
+        soba = validSoba();
     }
 
     private Soba validSoba() {
@@ -44,56 +52,56 @@ class SobaTest {
         return tipSobe;
     }
 
-    private void assertInvalid(Soba soba) {
+    private void assertValidationViolations(String propertyName, String... expectedMessages) {
         Set<ConstraintViolation<Soba>> violations = validator.validate(soba);
-        assertFalse(violations.isEmpty());
+        assertEquals(expectedMessages.length, violations.size());
+        assertTrue(violations.stream()
+                .allMatch(violation -> propertyName.equals(violation.getPropertyPath().toString())));
+
+        Set<String> actualMessages = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(expectedMessages), actualMessages);
     }
 
     @Test
     void testSetIdSoba() {
-        Soba soba = validSoba();
         soba.setIdSoba(2L);
         assertEquals(2L, soba.getIdSoba());
     }
 
     @Test
     void testSetOpis() {
-        Soba soba = validSoba();
         soba.setOpis("Standard soba");
         assertEquals("Standard soba", soba.getOpis());
     }
 
     @Test
     void testSetCena() {
-        Soba soba = validSoba();
         soba.setCena(150.0);
         assertEquals(150.0, soba.getCena());
     }
 
     @Test
     void testSetJedinicaMere() {
-        Soba soba = validSoba();
         soba.setJedinicaMere("noc");
         assertEquals("noc", soba.getJedinicaMere());
     }
 
     @Test
     void testSetDostupna() {
-        Soba soba = validSoba();
         soba.setDostupna(false);
         assertFalse(soba.getDostupna());
     }
 
     @Test
     void testSetSlikaUrl() {
-        Soba soba = validSoba();
         soba.setSlikaUrl("nova-slika.jpg");
         assertEquals("nova-slika.jpg", soba.getSlikaUrl());
     }
 
     @Test
     void testSetTipSobe() {
-        Soba soba = validSoba();
         TipSobe tipSobe = validTipSobe();
         tipSobe.setNaziv("standard");
         soba.setTipSobe(tipSobe);
@@ -102,7 +110,6 @@ class SobaTest {
 
     @Test
     void testSetStavkeRezervacije() {
-        Soba soba = validSoba();
         Set<StavkaRezervacije> stavke = new HashSet<>();
         stavke.add(new StavkaRezervacije());
         soba.setStavkeRezervacije(stavke);
@@ -111,86 +118,76 @@ class SobaTest {
 
     @Test
     void testValidationPassesForValidSoba() {
-        Soba soba = validSoba();
         Set<ConstraintViolation<Soba>> violations = validator.validate(soba);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void testValidationFailsWhenOpisIsBlank() {
-        Soba soba = validSoba();
-        soba.setOpis("");
-        assertInvalid(soba);
+        soba.setOpis("     ");
+        assertValidationViolations("opis", "Opis sobe je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenOpisIsTooShort() {
-        Soba soba = validSoba();
         soba.setOpis("Soba");
-        assertInvalid(soba);
+        assertValidationViolations("opis", "Opis sobe mora imati izmedju 5 i 255 karaktera.");
     }
 
     @Test
     void testValidationFailsWhenOpisIsTooLong() {
-        Soba soba = validSoba();
         soba.setOpis("a".repeat(256));
-        assertInvalid(soba);
+        assertValidationViolations("opis", "Opis sobe mora imati izmedju 5 i 255 karaktera.");
     }
 
     @Test
     void testValidationFailsWhenCenaIsNull() {
-        Soba soba = validSoba();
         soba.setCena(null);
-        assertInvalid(soba);
+        assertValidationViolations("cena", "Cena sobe je obavezna.");
     }
 
     @Test
     void testValidationFailsWhenCenaIsZero() {
-        Soba soba = validSoba();
         soba.setCena(0.0);
-        assertInvalid(soba);
+        assertValidationViolations("cena", "Cena sobe mora biti pozitivna vrednost.");
     }
 
     @Test
     void testValidationFailsWhenCenaIsNegative() {
-        Soba soba = validSoba();
         soba.setCena(-1.0);
-        assertInvalid(soba);
+        assertValidationViolations("cena", "Cena sobe mora biti pozitivna vrednost.");
     }
 
     @Test
     void testValidationFailsWhenJedinicaMereIsBlank() {
-        Soba soba = validSoba();
-        soba.setJedinicaMere("");
-        assertInvalid(soba);
+        soba.setJedinicaMere("   ");
+        assertValidationViolations("jedinicaMere",
+                "Jedinica mere je obavezna.",
+                "Jedinica mere mora biti noc.");
     }
 
     @Test
     void testValidationFailsWhenJedinicaMereIsInvalid() {
-        Soba soba = validSoba();
         soba.setJedinicaMere("dan");
-        assertInvalid(soba);
+        assertValidationViolations("jedinicaMere", "Jedinica mere mora biti noc.");
     }
 
     @Test
     void testValidationFailsWhenDostupnaIsNull() {
-        Soba soba = validSoba();
         soba.setDostupna(null);
-        assertInvalid(soba);
+        assertValidationViolations("dostupna", "Dostupnost sobe je obavezna.");
     }
 
     @Test
     void testValidationFailsWhenSlikaUrlIsBlank() {
-        Soba soba = validSoba();
-        soba.setSlikaUrl("");
-        assertInvalid(soba);
+        soba.setSlikaUrl(" ");
+        assertValidationViolations("slikaUrl", "URL slike je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenTipSobeIsNull() {
-        Soba soba = validSoba();
         soba.setTipSobe(null);
-        assertInvalid(soba);
+        assertValidationViolations("tipSobe", "Tip sobe je obavezan.");
     }
 
     @Test
@@ -203,7 +200,6 @@ class SobaTest {
 
     @Test
     void testToStringContainsBasicFieldsAndExcludesRelations() {
-        Soba soba = validSoba();
         soba.getStavkeRezervacije().add(new StavkaRezervacije());
         String result = soba.toString();
         assertTrue(result.contains("idSoba=1"));

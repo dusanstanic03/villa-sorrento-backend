@@ -10,15 +10,23 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class GostTest {
-
+    private Gost gost;
     private final Validator validator;
 
     GostTest() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    @BeforeEach
+    void setUp() {
+        gost = validGost();
     }
 
     private Gost validGost() {
@@ -32,49 +40,50 @@ class GostTest {
         return gost;
     }
 
-    private void assertInvalid(Gost gost) {
+    private void assertValidationViolations(String propertyName, String... expectedMessages) {
         Set<ConstraintViolation<Gost>> violations = validator.validate(gost);
-        assertFalse(violations.isEmpty());
+        assertEquals(expectedMessages.length, violations.size());
+        assertTrue(violations.stream()
+                .allMatch(violation -> propertyName.equals(violation.getPropertyPath().toString())));
+
+        Set<String> actualMessages = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(expectedMessages), actualMessages);
     }
 
     @Test
     void testSetIdGost() {
-        Gost gost = validGost();
         gost.setIdGost(2L);
         assertEquals(2L, gost.getIdGost());
     }
 
     @Test
     void testSetIme() {
-        Gost gost = validGost();
         gost.setIme("Marko");
         assertEquals("Marko", gost.getIme());
     }
 
     @Test
     void testSetPrezime() {
-        Gost gost = validGost();
         gost.setPrezime("Markovic");
         assertEquals("Markovic", gost.getPrezime());
     }
 
     @Test
     void testSetBrojIsprave() {
-        Gost gost = validGost();
         gost.setBrojIsprave("98765");
         assertEquals("98765", gost.getBrojIsprave());
     }
 
     @Test
     void testSetBrojTelefona() {
-        Gost gost = validGost();
         gost.setBrojTelefona("061222333");
         assertEquals("061222333", gost.getBrojTelefona());
     }
 
     @Test
     void testSetStavkeRezervacije() {
-        Gost gost = validGost();
         Set<StavkaRezervacije> stavke = new HashSet<>();
         stavke.add(new StavkaRezervacije());
         gost.setStavkeRezervacije(stavke);
@@ -83,107 +92,96 @@ class GostTest {
 
     @Test
     void testValidationPassesForValidGost() {
-        Gost gost = validGost();
         Set<ConstraintViolation<Gost>> violations = validator.validate(gost);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void testValidationFailsWhenImeIsBlank() {
-        Gost gost = validGost();
-        gost.setIme("");
-        assertInvalid(gost);
+        gost.setIme("   ");
+        assertValidationViolations("ime", "Ime gosta je obavezno.");
     }
 
     @Test
     void testValidationFailsWhenImeIsTooShort() {
-        Gost gost = validGost();
         gost.setIme("Pe");
-        assertInvalid(gost);
+        assertValidationViolations("ime", "Ime mora imati izmedju 3 i 15 slova.");
     }
 
     @Test
     void testValidationFailsWhenImeIsTooLong() {
-        Gost gost = validGost();
         gost.setIme("abcdefghijklmnop");
-        assertInvalid(gost);
+        assertValidationViolations("ime", "Ime mora imati izmedju 3 i 15 slova.");
     }
 
     @Test
     void testValidationFailsWhenPrezimeIsBlank() {
-        Gost gost = validGost();
-        gost.setPrezime("");
-        assertInvalid(gost);
+        gost.setPrezime("   ");
+        assertValidationViolations("prezime", "Prezime gosta je obavezno.");
     }
 
     @Test
     void testValidationFailsWhenPrezimeIsTooShort() {
-        Gost gost = validGost();
         gost.setPrezime("Pe");
-        assertInvalid(gost);
+        assertValidationViolations("prezime", "Prezime mora imati izmedju 3 i 15 slova.");
     }
 
     @Test
     void testValidationFailsWhenPrezimeIsTooLong() {
-        Gost gost = validGost();
         gost.setPrezime("abcdefghijklmnop");
-        assertInvalid(gost);
+        assertValidationViolations("prezime", "Prezime mora imati izmedju 3 i 15 slova.");
     }
 
     @Test
     void testValidationFailsWhenBrojIspraveIsBlank() {
-        Gost gost = validGost();
-        gost.setBrojIsprave("");
-        assertInvalid(gost);
+        gost.setBrojIsprave("     ");
+        assertValidationViolations("brojIsprave",
+                "Broj isprave gosta je obavezan.",
+                "Broj isprave sme sadrzati samo cifre.");
     }
 
     @Test
     void testValidationFailsWhenBrojIspraveIsTooShort() {
-        Gost gost = validGost();
         gost.setBrojIsprave("1234");
-        assertInvalid(gost);
+        assertValidationViolations("brojIsprave", "Broj isprave mora imati izmedju 5 i 20 cifara.");
     }
 
     @Test
     void testValidationFailsWhenBrojIspraveIsTooLong() {
-        Gost gost = validGost();
         gost.setBrojIsprave("123456789012345678901");
-        assertInvalid(gost);
+        assertValidationViolations("brojIsprave", "Broj isprave mora imati izmedju 5 i 20 cifara.");
     }
 
     @Test
     void testValidationFailsWhenBrojIspraveContainsLetters() {
-        Gost gost = validGost();
-        gost.setBrojIsprave("ABC123");
-        assertInvalid(gost);
+        gost.setBrojIsprave("ABC12");
+        assertValidationViolations("brojIsprave", "Broj isprave sme sadrzati samo cifre.");
     }
 
     @Test
     void testValidationFailsWhenBrojTelefonaIsBlank() {
-        Gost gost = validGost();
-        gost.setBrojTelefona("");
-        assertInvalid(gost);
+        gost.setBrojTelefona("     ");
+        assertValidationViolations("brojTelefona",
+                "Broj telefona gosta je obavezan.",
+                "Broj telefona sme sadrzati samo cifre.");
     }
 
     @Test
     void testValidationFailsWhenBrojTelefonaIsTooShort() {
-        Gost gost = validGost();
         gost.setBrojTelefona("1234");
-        assertInvalid(gost);
+        assertValidationViolations("brojTelefona", "Broj telefona mora imati izmedju 5 i 20 cifara.");
     }
 
     @Test
     void testValidationFailsWhenBrojTelefonaIsTooLong() {
-        Gost gost = validGost();
         gost.setBrojTelefona("123456789012345678901");
-        assertInvalid(gost);
+        assertValidationViolations("brojTelefona", "Broj telefona mora imati izmedju 5 i 20 cifara.");
     }
 
     @Test
     void testValidationFailsWhenBrojTelefonaContainsLetters() {
-        Gost gost = validGost();
         gost.setBrojTelefona("060ABC");
-        assertInvalid(gost);
+        assertValidationViolations("brojTelefona", "Broj telefona sme sadrzati samo cifre.");
     }
 
     @Test
@@ -196,7 +194,6 @@ class GostTest {
 
     @Test
     void testToStringContainsBasicFieldsAndExcludesRelations() {
-        Gost gost = validGost();
         gost.getStavkeRezervacije().add(new StavkaRezervacije());
         String result = gost.toString();
         assertTrue(result.contains("idGost=1"));

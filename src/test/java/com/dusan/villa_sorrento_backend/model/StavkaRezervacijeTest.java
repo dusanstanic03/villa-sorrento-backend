@@ -11,15 +11,23 @@ import jakarta.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class StavkaRezervacijeTest {
 
     private final Validator validator;
+    private StavkaRezervacije stavka;
 
     StavkaRezervacijeTest() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    @BeforeEach
+    void setUp() {
+        stavka = validStavkaRezervacije();
     }
 
     private StavkaRezervacije validStavkaRezervacije() {
@@ -104,28 +112,32 @@ class StavkaRezervacijeTest {
         return usluga;
     }
 
-    private void assertInvalid(StavkaRezervacije stavka) {
+    private void assertValidationViolations(String propertyName, String... expectedMessages) {
         Set<ConstraintViolation<StavkaRezervacije>> violations = validator.validate(stavka);
-        assertFalse(violations.isEmpty());
+        assertEquals(expectedMessages.length, violations.size());
+        assertTrue(violations.stream()
+                .allMatch(violation -> propertyName.equals(violation.getPropertyPath().toString())));
+
+        Set<String> actualMessages = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(expectedMessages), actualMessages);
     }
 
     @Test
     void testSetId() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setId(2L);
         assertEquals(2L, stavka.getId());
     }
 
     @Test
     void testSetRb() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setRb(2);
         assertEquals(2, stavka.getRb());
     }
 
     @Test
     void testSetDatumOd() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         LocalDate datum = LocalDate.of(2026, 9, 1);
         stavka.setDatumOd(datum);
         assertEquals(datum, stavka.getDatumOd());
@@ -133,7 +145,6 @@ class StavkaRezervacijeTest {
 
     @Test
     void testSetDatumDo() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         LocalDate datum = LocalDate.of(2026, 9, 5);
         stavka.setDatumDo(datum);
         assertEquals(datum, stavka.getDatumDo());
@@ -141,14 +152,12 @@ class StavkaRezervacijeTest {
 
     @Test
     void testSetIznos() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setIznos(500.0);
         assertEquals(500.0, stavka.getIznos());
     }
 
     @Test
     void testSetRezervacija() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         Rezervacija rezervacija = validRezervacija();
         rezervacija.setIdRezervacija(2L);
         stavka.setRezervacija(rezervacija);
@@ -157,7 +166,6 @@ class StavkaRezervacijeTest {
 
     @Test
     void testSetSoba() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         Soba soba = validSoba();
         soba.setIdSoba(2L);
         stavka.setSoba(soba);
@@ -166,7 +174,6 @@ class StavkaRezervacijeTest {
 
     @Test
     void testSetGosti() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         Set<Gost> gosti = new HashSet<>();
         gosti.add(validGost());
         stavka.setGosti(gosti);
@@ -175,7 +182,6 @@ class StavkaRezervacijeTest {
 
     @Test
     void testSetUsluge() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         Set<Usluga> usluge = new HashSet<>();
         usluge.add(validUsluga());
         stavka.setUsluge(usluge);
@@ -184,51 +190,44 @@ class StavkaRezervacijeTest {
 
     @Test
     void testValidationPassesForValidStavkaRezervacije() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         Set<ConstraintViolation<StavkaRezervacije>> violations = validator.validate(stavka);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     void testValidationFailsWhenRbIsLessThanOne() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setRb(0);
-        assertInvalid(stavka);
+        assertValidationViolations("rb", "Redni broj stavke mora biti najmanje 1.");
     }
 
     @Test
     void testValidationFailsWhenDatumOdIsNull() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setDatumOd(null);
-        assertInvalid(stavka);
+        assertValidationViolations("datumOd", "Datum pocetka boravka je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenDatumDoIsNull() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setDatumDo(null);
-        assertInvalid(stavka);
+        assertValidationViolations("datumDo", "Datum kraja boravka je obavezan.");
     }
 
     @Test
     void testValidationFailsWhenIznosIsNegative() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setIznos(-1.0);
-        assertInvalid(stavka);
+        assertValidationViolations("iznos", "Iznos stavke ne sme biti negativan.");
     }
 
     @Test
     void testValidationFailsWhenRezervacijaIsNull() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setRezervacija(null);
-        assertInvalid(stavka);
+        assertValidationViolations("rezervacija", "Rezervacija je obavezna.");
     }
 
     @Test
     void testValidationFailsWhenSobaIsNull() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.setSoba(null);
-        assertInvalid(stavka);
+        assertValidationViolations("soba", "Soba je obavezna.");
     }
 
     @Test
@@ -241,7 +240,6 @@ class StavkaRezervacijeTest {
 
     @Test
     void testToStringContainsBasicFieldsAndExcludesRelations() {
-        StavkaRezervacije stavka = validStavkaRezervacije();
         stavka.getGosti().add(validGost());
         stavka.getUsluge().add(validUsluga());
         String result = stavka.toString();
